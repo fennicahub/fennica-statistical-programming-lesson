@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<title>Lesson Title: Instructor Notes</title>
+<title>Statistical Programming for Bibliographic Data Science: Instructor Notes</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="assets/themetoggle.js"></script><link rel="stylesheet" type="text/css" href="assets/styles.css">
 <script src="assets/scripts.js" type="text/javascript"></script><!-- mathjax --><!-- NOTE: https://docs.mathjax.org/en/latest/output/mathml.html#mathml-support --><!-- Changes from V2 to V4: https://mathjax.github.io/MathJax-demos-web/convert-configuration/convert-configuration.html
@@ -103,7 +103,7 @@
       <img class="small-logo" alt="Carpentries Incubator" src="assets/images/incubator-logo-sm.svg"></a>
     </div>
     <div class="lesson-title-md">
-      Lesson Title
+      Statistical Programming for Bibliographic Data Science
     </div>
     <div class="search-icon-sm">
       <!-- TODO: do not show until we have search
@@ -114,7 +114,7 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 <li class="nav-item">
           <span class="lesson-title">
-            Lesson Title
+            Statistical Programming for Bibliographic Data Science
           </span>
         </li>
         <li class="nav-item">
@@ -244,7 +244,79 @@
 <div class="accordion accordion-flush" id="accordionFlush2">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading2">
-        <a href="introduction.html">1. Using RMarkdown</a>
+        <a href="intro.html">1. Introduction to the Course</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush3">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading3">
+        <a href="fennica-data.html">2. Meet the Fennica Data</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush4">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading4">
+        <a href="harmonisation.html">3. Preprocessing and Harmonisation: From MARC Records to Variables</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush5">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading5">
+        <a href="validation.html">4. Validation: How Far Can We Trust the Harmonised Data?</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush6">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading6">
+        <a href="summarising-data.html">5. Summarising Data</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush7">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading7">
+        <a href="visualisation.html">6. Visualising Data with ggplot2</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush8">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading8">
+        <a href="statistics.html">7. Basic Statistical Analysis</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -327,14 +399,213 @@
         <h1>Instructor Notes</h1>
         
 
-<p>This is a placeholder file. Please add content here.</p>
+<section><h2 class="section-heading" id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h2>
+<hr class="half-width">
+<p>This module (Training Material 6: <em>Statistical programming for
+bibliographic data science</em>) uses the Fennica national bibliography
+(1809–1917) as a single running example. It covers preprocessing,
+harmonisation, validation and analysis. Learners are expected to know
+basic R (running scripts, loading packages, importing data, simple
+data-frame operations); no prior experience with bibliographic data is
+required. Episodes 2–4 (Meet the Fennica Data, harmonisation and
+validation) form Part 1 of the course: from raw records to
+analysis-ready, validated data. The analysis episodes are being
+redesigned to lead from descriptive statistics to statistical models and
+probabilistic analysis.</p>
+</section><section><h2 class="section-heading" id="before-the-workshop">Before the workshop<a class="anchor" aria-label="anchor" href="#before-the-workshop"></a>
+</h2>
+<hr class="half-width">
+<ul>
+<li>Ask learners to complete the <a href="index.html#setup">Setup</a> in
+advance. Installing <code>arrow</code> can take a while on some
+systems.</li>
+<li>Have the data file available on a USB stick or shared drive in case
+of slow internet.</li>
+<li>Test that <code>arrow::read_ipc_file()</code> works on the workshop
+machines.</li>
+</ul></section><section><h2 class="section-heading" id="episode-notes">Episode notes<a class="anchor" aria-label="anchor" href="#episode-notes"></a>
+</h2>
+<hr class="half-width">
+<div class="section level3">
+<h3 id="introduction-to-the-course">Introduction to the Course<a class="anchor" aria-label="anchor" href="#introduction-to-the-course"></a>
+</h3>
+<ul>
+<li>Introduce the running question and the course stages (table in the
+episode). Many learners know library catalogues but not MARC 21: walk
+through the example record field by field.</li>
+<li>Challenge 1 (reading a real record) prepares the harmonisation
+episode: the place is in field 264, not 260, and field 008 hides the
+year.</li>
+<li>Challenge 2 is a discussion; it works well in pairs, especially with
+participants from other countries.</li>
+<li>Demonstrate RStudio projects live: most later file path problems
+come from not working inside the project.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="meet-the-fennica-data">Meet the Fennica Data<a class="anchor" aria-label="anchor" href="#meet-the-fennica-data"></a>
+</h3>
+<ul>
+<li>Challenge 2 (swapped columns) is a good moment for discussion: how
+would you notice this in your own data? The validation episode returns
+to it.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="the-running-question">The running question<a class="anchor" aria-label="anchor" href="#the-running-question"></a>
+</h3>
+<p>Episodes 4 onwards follow one question: <em>how did the shift from
+Swedish to Finnish in publishing happen, and how certain can we be about
+it?</em> Return to it at the start and end of every episode. The
+harmonisation and validation episodes build the variables (language,
+place, publisher, author) and show that the answer depends on data
+decisions; later parts of the course quantify that uncertainty.</p>
+</div>
+<div class="section level3">
+<h3 id="preprocessing-and-harmonisation-about-80-minutes">Preprocessing and Harmonisation (about 80 minutes)<a class="anchor" aria-label="anchor" href="#preprocessing-and-harmonisation-about-80-minutes"></a>
+</h3>
+<ul>
+<li>Uses the raw records <code>priority_fields19.feather</code> (all
+72,626 records; the <code>id</code> matches the harmonised data
+exactly). Columns are named, but the episode maps each to its MARC
+field.</li>
+<li>Rhythm for every field: profile, find a pattern, clean with a
+function, count again. Each field ends as a function; the episode ends
+with <code>harmonise_records()</code>, which is also in
+<code>files/harmonise_fennica.R</code>.</li>
+<li>Key teaching moments:
+<ul>
+<li>
+<strong>Two sources for the same information:</strong> 041 vs 008
+for language, 260 vs 264 for place. Combine them with
+<code>coalesce()</code>.</li>
+<li>
+<strong>Mikkeli (Challenge 2):</strong> field 264 of about 8,650
+digitised copies gives the National Library’s digitisation centre in
+Mikkeli as the place. Let learners discover this themselves; it is the
+central “a clean value can measure the wrong thing” example.</li>
+<li>
+<strong>Synonym table:</strong> entries are partly ASCII-folded
+(<code>abo</code>, <code>borga</code>), hence <code>fold()</code>.
+Unmatched values include Russian forms and Finnish emigrant presses in
+the USA.</li>
+<li>
+<strong>Authority IDs:</strong> <code>asteri_id</code> separates the
+Runebergs and the two Alexandre Dumas. Among records with an ID there
+are more persons than name strings.</li>
+</ul>
+</li>
+<li>Regular expressions are new to many learners: build each pattern
+live on the small <code>places</code> vector first.</li>
+<li>If time is short, skip the publisher section.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="validation-about-70-minutes">Validation (about 70 minutes)<a class="anchor" aria-label="anchor" href="#validation-about-70-minutes"></a>
+</h3>
+<ul>
+<li>Three kinds of validation: rules, comparison with an independent
+harmonisation (the project’s file), and consequences for the research
+question.</li>
+<li>Rule failures lead back to raw records: numbers as author names,
+dates in the name field (<code>|</code>), and <em>S.l</em>/<em>S.a</em>
+in the publisher field.</li>
+<li>The comparison shows several problems in the project’s harmonised
+file:
+<ul>
+<li>its place and publisher columns are swapped;</li>
+<li>it keeps language-specific place names (Helsingfors vs
+Helsinki);</li>
+<li>
+<code>Turku</code> appears as a publisher for “… i Finland”
+societies;</li>
+<li>
+<code>polish_author()</code> reverses patronymics
+(<code>Ragvaldinpoika, Thomas</code>).</li>
+</ul>
+</li>
+<li>Missingness: Swedish records lack a publisher (52%) and a place
+(21%) more often than Finnish ones (30% and 16%). The sensitivity plot
+shows the Finnish share by decade for four subsets. Restricting to
+records with a known publisher moves the 50% crossing from the 1870s to
+the 1850s.</li>
+<li>Challenge 3 (Helsinki vs Helsingfors: 95% vs 4% Finnish) prepares
+the later modelling episodes: a raw place name is partly the outcome
+itself.</li>
+<li>The 1810s value is inflated by questionable dates; this is left for
+the publication-time episode.</li>
+<li>The lookup tables in <code>episodes/data/</code> are from
+<code>inst/extdata</code> of the <a href="https://github.com/fennicahub/fennica" class="external-link">fennica</a> package (BSD-2
+licence).</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="from-the-harmonised-data-to-fennica_clean">From the harmonised data to <code>fennica_clean</code>
+<a class="anchor" aria-label="anchor" href="#from-the-harmonised-data-to-fennica_clean"></a>
+</h3>
+<ul>
+<li>The analysis episodes use <code>fennica_clean</code>, created from
+the project’s harmonised file by <code>files/clean_fennica.R</code>
+(swap fixed, places merged, English genre labels).</li>
+<li>Further findings from running the real <code>polish_*()</code>
+functions: <code>polish_author_years()</code> turns <em>syntynyt
+1875</em> (“born 1875”) into birth = death = 1875 (the “age zero”
+authors in the visualisation episode), and the harmonised
+<code>title</code> column is the uniform title (field 240).</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="summarising-data">Summarising Data<a class="anchor" aria-label="anchor" href="#summarising-data"></a>
+</h3>
+<ul>
+<li>Stress the difference between counts and proportions; the language
+shift from Swedish to Finnish is the key historical story.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="visualising-data-with-ggplot2">Visualising Data with ggplot2<a class="anchor" aria-label="anchor" href="#visualising-data-with-ggplot2"></a>
+</h3>
+<ul>
+<li>Build plots incrementally, adding one layer at a time.</li>
+<li>The faceting example with <code>scales = "free_y"</code> is a good
+prompt to discuss how plot choices can mislead.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="basic-statistical-analysis">Basic Statistical Analysis<a class="anchor" aria-label="anchor" href="#basic-statistical-analysis"></a>
+</h3>
+<ul>
+<li>Learners may have no statistics background. Focus on interpretation
+rather than formulas.</li>
+<li>The key messages are: medians for skewed data, correlation is not
+causation, and with large data effect sizes matter more than
+p-values.</li>
+</ul>
+</div>
+</section><section><h2 class="section-heading" id="known-data-issues">Known data issues<a class="anchor" aria-label="anchor" href="#known-data-issues"></a>
+</h2>
+<hr class="half-width">
+<ul>
+<li>
+<code>publisher</code> and <code>publication_place</code> are
+swapped in the source data; this is discovered in the validation
+episode.</li>
+<li>
+<code>title2</code> contains a <code>"Na  "</code> prefix when
+<code>title</code> is missing.</li>
+<li>
+<code>genre_008</code> contains character-set values
+(e.g. “Laajennettu latinalainen”).</li>
+<li>The page count and physical dimension columns are mostly empty or
+unreliable and are not used in the lesson.</li>
+<li>Decade <code>1800</code> contains only records from 1809, and the
+1910s end in 1917.</li>
+</ul>
 <!--
 Place links that you need to refer to multiple times across pages here. Delete
 any links that you are not going to use.
- -->
-
-
-      <section id="aggregate-instructor-notes"></section>
+ --></section><section id="aggregate-instructor-notes"></section>
 </div>
     </main>
 </div>
@@ -347,14 +618,14 @@ any links that you are not going to use.
         <p>This lesson is subject to the <a href="CODE_OF_CONDUCT.html">Code of Conduct</a></p>
         <p>
 
-        <a href="https://github.com/carpentries/workbench-template-rmd/edit/main/README.md" class="external-link">Edit on GitHub</a>
+        <a href="https://github.com/fennicahub/fennica-statistical-programming-lesson/edit/main/README.md" class="external-link">Edit on GitHub</a>
 
 	
-        | <a href="https://github.com/carpentries/workbench-template-rmd/blob/main/CONTRIBUTING.md" class="external-link">Contributing</a>
-        | <a href="https://github.com/carpentries/workbench-template-rmd/" class="external-link">Source</a></p>
+        | <a href="https://github.com/fennicahub/fennica-statistical-programming-lesson/blob/main/CONTRIBUTING.md" class="external-link">Contributing</a>
+        | <a href="https://github.com/fennicahub/fennica-statistical-programming-lesson/" class="external-link">Source</a></p>
         <p>
         <a href="citation.html">Cite</a>
-        | <a href="mailto:team@carpentries.org">Contact</a> | <a href="https://carpentries.org/about/" class="external-link">About</a></p>
+        | <a href="mailto:FIXME@example.org">Contact</a> | <a href="https://carpentries.org/about/" class="external-link">About</a></p>
 		</div>
 		<div class="col-md-6">
 
@@ -374,18 +645,18 @@ any links that you are not going to use.
     {
   "@context": "https://schema.org",
   "@type": "LearningResource",
-  "@id": "https://carpentries.github.io/workbench-template-rmd/instructor-notes.html",
+  "@id": "https://fennicahub.github.io/fennica-statistical-programming-lesson/instructor-notes.html",
   "inLanguage": "en",
   "dct:conformsTo": "https://bioschemas.org/profiles/LearningResource/1.0-RELEASE",
   "description": "A Carpentries Lesson teaching foundational data and coding skills to researchers worldwide",
-  "keywords": "software, data, lesson, The Carpentries",
+  "keywords": "R, tidyverse, statistics, bibliographic data science, preprocessing, harmonisation, validation, Fennica, digital humanities, lesson, The Carpentries",
   "name": "Instructor Notes",
   "creativeWorkStatus": "active",
-  "url": "https://carpentries.github.io/workbench-template-rmd/instructor-notes.html",
-  "identifier": "https://carpentries.github.io/workbench-template-rmd/instructor-notes.html",
-  "dateCreated": "2026-10-19",
-  "dateModified": "2026-11-03",
-  "datePublished": "2026-11-03"
+  "url": "https://fennicahub.github.io/fennica-statistical-programming-lesson/instructor-notes.html",
+  "identifier": "https://fennicahub.github.io/fennica-statistical-programming-lesson/instructor-notes.html",
+  "dateCreated": "2026-11-06",
+  "dateModified": "2026-11-06",
+  "datePublished": "2026-11-06"
 }
 
   </script><script>

@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<title>Lesson Title: Key Points</title>
+<title>Statistical Programming for Bibliographic Data Science: Key Points</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="../assets/themetoggle.js"></script><link rel="stylesheet" type="text/css" href="../assets/styles.css">
 <script src="../assets/scripts.js" type="text/javascript"></script><!-- mathjax --><!-- NOTE: https://docs.mathjax.org/en/latest/output/mathml.html#mathml-support --><!-- Changes from V2 to V4: https://mathjax.github.io/MathJax-demos-web/convert-configuration/convert-configuration.html
@@ -103,7 +103,7 @@
       <img class="small-logo" alt="Carpentries Incubator" src="../assets/images/incubator-logo-sm.svg"></a>
     </div>
     <div class="lesson-title-md">
-      Lesson Title
+      Statistical Programming for Bibliographic Data Science
     </div>
     <div class="search-icon-sm">
       <!-- TODO: do not show until we have search
@@ -114,7 +114,7 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 <li class="nav-item">
           <span class="lesson-title">
-            Lesson Title
+            Statistical Programming for Bibliographic Data Science
           </span>
         </li>
         <li class="nav-item">
@@ -245,7 +245,79 @@
 <div class="accordion accordion-flush" id="accordionFlush2">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading2">
-        <a href="introduction.html">1. Using RMarkdown</a>
+        <a href="intro.html">1. Introduction to the Course</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush3">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading3">
+        <a href="fennica-data.html">2. Meet the Fennica Data</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush4">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading4">
+        <a href="harmonisation.html">3. Preprocessing and Harmonisation: From MARC Records to Variables</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush5">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading5">
+        <a href="validation.html">4. Validation: How Far Can We Trust the Harmonised Data?</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush6">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading6">
+        <a href="summarising-data.html">5. Summarising Data</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush7">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading7">
+        <a href="visualisation.html">6. Visualising Data with ggplot2</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush8">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading8">
+        <a href="statistics.html">7. Basic Statistical Analysis</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -328,17 +400,117 @@
     <main id="main-content" class="main-content"><div class="container lesson-content">
         <h1>Key Points</h1>
         
-<section id="introduction"><h2 class="section-heading"><a href="introduction.html">Using RMarkdown</a></h2>
+<section id="intro"><h2 class="section-heading"><a href="intro.html">Introduction to the Course</a></h2>
 <hr class="half-width">
 <ul>
-<li>Use <code>.md</code> files for episodes when you want static
-content</li>
-<li>Use <code>.Rmd</code> files for episodes when you need to generate
-output</li>
-<li>Run <code>sandpaper::check_lesson()</code> to identify any issues
-with your lesson</li>
-<li>Run <code>sandpaper::build_lesson()</code> to preview your lesson
-locally</li>
+<li>Bibliographic records, taken together, are a dataset about the
+history of publishing.</li>
+<li>MARC 21 records consist of numbered fields and lettered subfields;
+field 008 is a fixed-length code.</li>
+<li>Cataloguing punctuation and conventions must be removed or
+interpreted before analysis.</li>
+<li>The course moves from preprocessing and harmonisation through
+validation to analysis and modelling.</li>
+<li>Ready-made harmonisation code, such as the fennica package, can be
+reused, but its rules and lookup tables must be adapted to each
+bibliography.</li>
+<li>Work in an RStudio project and keep every step in a script, so your
+work is reproducible.</li>
+</ul></section><section id="fennica-data"><h2 class="section-heading"><a href="fennica-data.html">Meet the Fennica Data</a></h2>
+<hr class="half-width">
+<ul>
+<li>Fennica is the Finnish national bibliography; our data covers
+1809–1917.</li>
+<li>Each row of the data frame is one bibliographic record, each column
+one variable.</li>
+<li>Use <code>read_ipc_file()</code> from <code>arrow</code> to read
+Feather files.</li>
+<li>
+<code>dim()</code>, <code>glimpse()</code>, <code>summary()</code>
+and <code>table()</code> give a quick overview of the data.</li>
+<li>Check how much data is missing, and whether columns contain what
+their names suggest.</li>
+</ul></section><section id="harmonisation"><h2 class="section-heading"><a href="harmonisation.html">Preprocessing and Harmonisation: From MARC Records to Variables</a></h2>
+<hr class="half-width">
+<ul>
+<li>Start with a profile of the data: unique values, missing values and
+the most common forms.</li>
+<li>Cataloguing punctuation, brackets and abbreviations are formal noise
+that regex can remove.</li>
+<li>Lookup and synonym tables translate codes and merge variants; they
+are data that can be shared and corrected.</li>
+<li>The same information is often recorded in several MARC fields (041
+and 008, 260 and 264); combine them with <code>coalesce()</code>, but
+check what each field really records.</li>
+<li>A clean value can still measure the wrong thing: for digitised
+copies, field 264 gives the place of digitisation.</li>
+<li>Name strings are not persons; authority identifiers are needed to
+tell people apart.</li>
+<li>Write each harmonisation step as a function and run the whole
+pipeline from the raw data.</li>
+</ul></section><section id="validation"><h2 class="section-heading"><a href="validation.html">Validation: How Far Can We Trust the Harmonised Data?</a></h2>
+<hr class="half-width">
+<ul>
+<li>Validation rules are logical tests written as code; count the
+records that fail and inspect them in the raw data.</li>
+<li>Use <code>stopifnot()</code> for rules that must never fail, and a
+report for rules that may.</li>
+<li>Two independent harmonisations of the same records are a powerful
+check: disagreements reveal errors in both.</li>
+<li>The Fennica project’s harmonised data has swapped place and
+publisher columns and keeps language-specific place names.</li>
+<li>Missing values in bibliographic data are not random: Swedish
+publications lack a publisher or place more often than Finnish
+ones.</li>
+<li>Always test whether cleaning and selection decisions change the
+answer to your research question.</li>
+</ul></section><section id="summarising-data"><h2 class="section-heading"><a href="summarising-data.html">Summarising Data</a></h2>
+<hr class="half-width">
+<ul>
+<li>
+<code>group_by()</code> + <code>summarise()</code> calculates
+summaries for each group.</li>
+<li>
+<code>n()</code> counts rows and <code>n_distinct()</code> counts
+unique values.</li>
+<li>Use proportions rather than raw counts to compare groups of
+different sizes.</li>
+<li>
+<code>ungroup()</code> or <code>.groups = "drop"</code> removes
+grouping when you no longer need it.</li>
+<li>
+<code>pivot_wider()</code> turns a long table into a wide one that
+is easier to read.</li>
+</ul></section><section id="visualisation"><h2 class="section-heading"><a href="visualisation.html">Visualising Data with ggplot2</a></h2>
+<hr class="half-width">
+<ul>
+<li>A ggplot is built from data, aesthetic mappings (<code>aes()</code>)
+and geoms, joined with <code>+</code>.</li>
+<li>Bar charts compare categories, line charts show change, histograms
+and box plots show distributions.</li>
+<li>Map a variable to <code>colour</code> or <code>fill</code>, or use
+<code>facet_wrap()</code>, to show more variables.</li>
+<li>Sort categories, label axes and choose sensible scales to make plots
+readable.</li>
+<li>Save plots with <code>ggsave()</code>.</li>
+</ul></section><section id="statistics"><h2 class="section-heading"><a href="statistics.html">Basic Statistical Analysis</a></h2>
+<hr class="half-width">
+<ul>
+<li>Use the median and quantiles to describe skewed variables; the mean
+is sensitive to extreme values.</li>
+<li>
+<code>cor()</code> measures association; Spearman correlation is
+more robust for skewed data.</li>
+<li>
+<code>t.test()</code> and <code>wilcox.test()</code> compare two
+groups; <code>chisq.test()</code> tests two categorical variables.</li>
+<li>
+<code>lm()</code> fits a linear regression; the slope tells how much
+y changes per unit of x.</li>
+<li>With large datasets, focus on effect sizes and plots, not only on
+p-values.</li>
+<li>Correlation is not causation, and every model is a
+simplification.</li>
 </ul></section>
 </div>
     </main>
@@ -352,14 +524,14 @@ locally</li>
         <p>This lesson is subject to the <a href="CODE_OF_CONDUCT.html">Code of Conduct</a></p>
         <p>
 
-        <a href="https://github.com/carpentries/workbench-template-rmd/edit/main/README.md" class="external-link">Edit on GitHub</a>
+        <a href="https://github.com/fennicahub/fennica-statistical-programming-lesson/edit/main/README.md" class="external-link">Edit on GitHub</a>
 
 	
-        | <a href="https://github.com/carpentries/workbench-template-rmd/blob/main/CONTRIBUTING.md" class="external-link">Contributing</a>
-        | <a href="https://github.com/carpentries/workbench-template-rmd/" class="external-link">Source</a></p>
+        | <a href="https://github.com/fennicahub/fennica-statistical-programming-lesson/blob/main/CONTRIBUTING.md" class="external-link">Contributing</a>
+        | <a href="https://github.com/fennicahub/fennica-statistical-programming-lesson/" class="external-link">Source</a></p>
         <p>
         <a href="../citation.html">Cite</a>
-        | <a href="mailto:team@carpentries.org">Contact</a> | <a href="https://carpentries.org/about/" class="external-link">About</a></p>
+        | <a href="mailto:FIXME@example.org">Contact</a> | <a href="https://carpentries.org/about/" class="external-link">About</a></p>
 		</div>
 		<div class="col-md-6">
 
@@ -379,18 +551,18 @@ locally</li>
     {
   "@context": "https://schema.org",
   "@type": "LearningResource",
-  "@id": "https://carpentries.github.io/workbench-template-rmd/instructor/key-points.html",
+  "@id": "https://fennicahub.github.io/fennica-statistical-programming-lesson/instructor/key-points.html",
   "inLanguage": "en",
   "dct:conformsTo": "https://bioschemas.org/profiles/LearningResource/1.0-RELEASE",
   "description": "A Carpentries Lesson teaching foundational data and coding skills to researchers worldwide",
-  "keywords": "software, data, lesson, The Carpentries",
+  "keywords": "R, tidyverse, statistics, bibliographic data science, preprocessing, harmonisation, validation, Fennica, digital humanities, lesson, The Carpentries",
   "name": "Key Points",
   "creativeWorkStatus": "active",
-  "url": "https://carpentries.github.io/workbench-template-rmd/instructor/key-points.html",
-  "identifier": "https://carpentries.github.io/workbench-template-rmd/instructor/key-points.html",
-  "dateCreated": "2026-10-19",
-  "dateModified": "2026-11-03",
-  "datePublished": "2026-11-03"
+  "url": "https://fennicahub.github.io/fennica-statistical-programming-lesson/instructor/key-points.html",
+  "identifier": "https://fennicahub.github.io/fennica-statistical-programming-lesson/instructor/key-points.html",
+  "dateCreated": "2026-11-06",
+  "dateModified": "2026-11-06",
+  "datePublished": "2026-11-06"
 }
 
   </script><script>
