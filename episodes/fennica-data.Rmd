@@ -1,0 +1,205 @@
+---
+title: "Meet the Fennica Data"
+teaching: 20
+exercises: 10
+---
+
+:::::::::::::::::::::::::::::::::::::: questions
+
+- What is the Fennica bibliography and what does our dataset contain?
+- How do I load a data file into R?
+- How do I get an overview of a data frame?
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: objectives
+
+- Describe what a bibliographic record is and what the dataset covers.
+- Load the Fennica data into R as a data frame.
+- Inspect the size, columns and contents of a data frame.
+- Measure how much data is missing in each column.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## The Fennica bibliography
+
+**Fennica** is the Finnish national bibliography, maintained by the National
+Library of Finland. It aims to record everything published in Finland, and
+publications about Finland or by Finnish authors published abroad.
+
+Each publication is described by a **bibliographic record**: a catalogue entry
+with fields such as the author, title, year and place of publication, language
+and subject. Library records are stored in a format called MARC, where fields
+are identified by numbers. You will see some of these numbers in our column
+names, for example `author_name_100` (MARC field 100, the main author) and
+`genre_008` (MARC field 008, coded information).
+
+Our dataset, `harmonized_fennica19.feather`, contains **72,626 records** of
+publications from **1809 to 1917**, the period when Finland was an autonomous
+Grand Duchy within the Russian Empire. The data has been *harmonised*: some
+fields have been cleaned and standardised for research. As we will see, it
+still has plenty of quirks.
+
+## Loading the data
+
+The data is stored in the **Feather** format, a fast binary format for data
+frames, which we read with the `arrow` package. Feather files are also called
+Arrow IPC files, so the function is called `read_ipc_file()`:
+
+```{r, message = FALSE}
+library(arrow)
+library(dplyr)
+
+fennica <- read_ipc_file("data/harmonized_fennica19.feather")
+```
+
+::::::::::::::::::::::::::::::::::::: callout
+
+### File paths
+
+The path `"data/harmonized_fennica19.feather"` is *relative* to your working
+directory, which is your project folder. If R says the file does not exist,
+check that the file is in the `data` folder inside your project and that you
+opened the project (the `.Rproj` file).
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## A first look
+
+`fennica` is a **data frame** (more precisely a *tibble*, the tidyverse's
+version of a data frame). It is a table where each **row is one record** and
+each **column is one variable**.
+
+```{r}
+dim(fennica)
+nrow(fennica)
+ncol(fennica)
+```
+
+Typing the name of a tibble prints the first rows and as many columns as fit:
+
+```{r}
+fennica
+```
+
+With 79 columns, `glimpse()` gives a more readable overview: one line per
+column, showing its type and the first values.
+
+```{r}
+glimpse(fennica)
+```
+
+The most common column types are:
+
+| Type | Meaning | Example column |
+|------|---------|----------------|
+| `<chr>` | character (text) | `author_name_100` |
+| `<dbl>` | double (number) | `publication_year` |
+| `<int>` | integer (whole number) | `title_remainder_word` |
+| `<lgl>` | logical (`TRUE`/`FALSE`) | `language_008_multi` |
+
+## Working with single columns
+
+We pull out one column as a vector with `$`:
+
+```{r}
+head(fennica$publication_year)
+range(fennica$publication_year, na.rm = TRUE)
+```
+
+`table()` counts how often each value occurs, which is handy for categorical
+columns:
+
+```{r}
+table(fennica$data_element)
+```
+
+`Kirjat` means *books* and `Jatkuvat julkaisut` means *serials* (newspapers,
+magazines and other continuing publications). Some columns use Finnish labels
+because they come from Finnish cataloguing practice.
+
+`summary()` gives a quick statistical overview of a numeric column:
+
+```{r}
+summary(fennica$author_birth)
+```
+
+## How complete is the data?
+
+Bibliographic records are rarely complete. `is.na()` tells us which values are
+missing, and `colMeans()` computes the share of `TRUE` values per column.
+Here we look at a few key columns:
+
+```{r}
+key_columns <- c("author_name_100", "author_birth", "title_remainder",
+                 "publication_year", "language_008_primary", "publisher",
+                 "publication_place", "genre_008")
+
+round(colMeans(is.na(fennica[key_columns])) * 100)
+```
+
+More than a third of the records have no author. This is not necessarily an
+error: many publications, such as official documents, almanacs and serials,
+have no personal author. Missing data can carry meaning, and it shapes which
+questions we can answer.
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 1: Explore a column
+
+Use `table()` to look at the column `language_008_primary`.
+Which are the three most common languages?
+
+Hint: `sort(..., decreasing = TRUE)` sorts a table from largest to smallest.
+
+:::::::::::::::::::::::: solution
+
+```{r}
+sort(table(fennica$language_008_primary), decreasing = TRUE)[1:5]
+```
+
+Finnish, Swedish and Latin. Note how many Swedish-language publications there
+are: Swedish was the main language of administration and education for much
+of the 19th century.
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 2: Suspicious values
+
+Look at the first values of the columns `publisher` and `publication_place`:
+
+```r
+head(unique(fennica$publisher), 10)
+head(unique(fennica$publication_place), 10)
+```
+
+Does anything look strange?
+
+:::::::::::::::::::::::: solution
+
+```{r}
+head(unique(fennica$publisher), 10)
+head(unique(fennica$publication_place), 10)
+```
+
+The `publisher` column contains **places** (helsinki, helsingfors…), while
+`publication_place` contains **publishers** (WSOY, Otava…). The two columns
+appear to have been swapped somewhere in the processing. We come back to this in
+the episode on validation. Always check that your data contains what the
+column names promise!
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: keypoints
+
+- Fennica is the Finnish national bibliography; our data covers 1809–1917.
+- Each row of the data frame is one bibliographic record, each column one variable.
+- Use `read_ipc_file()` from `arrow` to read Feather files.
+- `dim()`, `glimpse()`, `summary()` and `table()` give a quick overview of the data.
+- Check how much data is missing, and whether columns contain what their names suggest.
+
+::::::::::::::::::::::::::::::::::::::::::::::::

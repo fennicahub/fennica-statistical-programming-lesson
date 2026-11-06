@@ -18,30 +18,30 @@ carpentry: 'incubator'
 # carpentry_description: "Custom Carpentry"
 
 # Overall title for pages.
-title: 'Lesson Title' # FIXME
+title: 'Statistical Programming for Bibliographic Data Science'
 
 # Date the lesson was created (YYYY-MM-DD, this is empty by default)
-created: ~ # FIXME: ( ~ means empty, replace with date formatted as above)
+created: '2026-11-06'
 
 # Comma-separated list of keywords for the lesson
-keywords: 'software, data, lesson, The Carpentries' # FIXME
+keywords: 'R, tidyverse, statistics, bibliographic data science, preprocessing, harmonisation, validation, Fennica, digital humanities, lesson, The Carpentries'
 
 # Life cycle stage of the lesson
 # refer to <https://docs.carpentries.org/resources/curriculum/lesson-life-cycle.html> for details
 # possible values: pre-alpha, alpha, beta, stable, retired
-life_cycle: 'pre-alpha' # FIXME
+life_cycle: 'pre-alpha'
 
 # License of the lesson
 license: 'CC-BY 4.0'
 
 # Link to the source repository for this lesson
-source: 'https://github.com/carpentries/workbench-template-rmd' # FIXME
+source: 'https://github.com/fennicahub/fennica-statistical-programming-lesson'
 
 # Default branch of your lesson
 branch: 'main'
 
 # Who to contact if there are any issues
-contact: 'team@carpentries.org' # FIXME
+contact: 'FIXME@example.org' # FIXME: add a contact email for the lesson maintainers
 
 # Navigation ------------------------------------------------
 #
@@ -66,8 +66,14 @@ contact: 'team@carpentries.org' # FIXME
 # - another-learner.md
 
 # Order of episodes in your lesson
-episodes: 
-- introduction.Rmd
+episodes:
+- intro.Rmd
+- fennica-data.Rmd
+- harmonisation.Rmd
+- validation.Rmd
+- summarising-data.Rmd
+- visualisation.Rmd
+- statistics.Rmd
 
 # Information for Learners
 learners: 

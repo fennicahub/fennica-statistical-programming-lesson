@@ -1,0 +1,755 @@
+---
+title: "Preprocessing and Harmonisation: From MARC Records to Variables"
+teaching: 55
+exercises: 25
+---
+
+:::::::::::::::::::::::::::::::::::::: questions
+
+- What do raw bibliographic records look like, and how do we get to know an unfamiliar export?
+- How do we turn free-text catalogue fields into variables we can analyse?
+- How can harmonisation be written as reusable, reproducible code?
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: objectives
+
+- Profile a raw dataset: unique values, missing values and the most common forms.
+- Clean text fields with regular expressions (`grepl()`, `gsub()`, `sub()`).
+- Harmonise codes and name variants with lookup tables and `match()`.
+- Combine information from several MARC fields, and recognise when a field measures something else than you think.
+- Package each harmonisation step as a function, and apply it to unique values only.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+```{r setup, include = FALSE}
+library(arrow)
+library(dplyr)
+library(tidyr)
+library(stringr)
+```
+
+## The running question
+
+Throughout this course we follow one research question:
+
+> **How did the shift from Swedish to Finnish in publishing happen in
+> 19th-century Finland, and how certain can we be about it?**
+
+In 1809 almost everything printed in Finland was in Swedish or Latin. By
+1917 most books were in Finnish. To study this shift we need, for every
+publication, at least its **language**, its **place of publication**, its
+**publisher** and its **author**. None of these exists as a clean variable in
+the library catalogue. In this episode we build them from the raw records
+(*preprocessing* and *harmonisation*); in the next episode we check how far we
+can trust the result (*validation*).
+
+::::::::::::::::::::::::::::::::::::: callout
+
+### Data has a history
+
+A catalogue record is not the book itself but a **description** of it, made by
+a cataloguer, often a century or more after printing, following cataloguing
+rules that have changed over time. The record was then edited, digitised,
+exported and processed. Each step can add variation (many spellings of the
+same name), missing values (unknown publisher) or errors. Keep asking:
+*what process produced this value?* The answer decides how we clean it, and
+later, how certain our conclusions can be.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## A first look at the raw records
+
+The file `priority_fields19.feather` contains the raw catalogue records of all
+Fennica publications from 1809 to 1917, exported from the National Library of
+Finland's catalogue. Only the most important (*priority*) MARC fields are
+included.
+
+```{r}
+raw <- read_ipc_file("data/priority_fields19.feather")
+dim(raw)
+names(raw)
+```
+
+The columns have readable names, but each one comes from a **MARC field**:
+a three-digit field number and a subfield letter. The ones we use are:
+
+| Column | MARC field | Content |
+|--------|-----------|---------|
+| `id` | 001 | record identifier |
+| `field_008` | 008 | fixed-length coded data (dates, language, …) |
+| `author_name` | 100a | main author: name |
+| `author_date` | 100d | main author: years of life |
+| `asteri_id` | 100 (authority link) | main author: identifier in the authority file |
+| `language_041` | 041a | language code(s) |
+| `language_008` | 008/35–37 | language code inside field 008 |
+| `publication_place` | 260a | place of publication |
+| `publisher` | 260b | publisher |
+| `publication_place_264` | 264a | place of publication (newer rules) |
+| `physical_extent` | 300a | number of pages, or type of resource |
+
+We keep only these columns, with short names:
+
+```{r}
+records <- raw |>
+  select(id, field_008,
+         author = author_name, author_date, asteri_id,
+         language_041, language_008,
+         place_260 = publication_place, place_264 = publication_place_264,
+         publisher, extent = physical_extent)
+```
+
+### Profiling: how messy is each column?
+
+Before cleaning anything we want an overview: how many **different** values
+does each column have, and how much is **missing**? We write a function for
+it, because we will use it again and again:
+
+```{r}
+is_blank <- function(x) is.na(x) | str_trim(x) == ""
+
+profile <- function(data) {
+  data |>
+    summarise(across(everything(), list(
+      n_unique = \(x) n_distinct(x[!is_blank(x)]),
+      pct_missing = \(x) round(100 * mean(is_blank(x)), 1)
+    ))) |>
+    pivot_longer(everything(),
+                 names_to = c("column", ".value"),
+                 names_pattern = "(.*)_(n_unique|pct_missing)")
+}
+
+profile(records)
+```
+
+`across()` applies the two summaries to every column, and `pivot_longer()`
+turns the one-row result into one row per column. (`\(x)` is a short way of
+writing `function(x)`.) We will also often need the number of unique,
+non-missing values of a single column:
+
+```{r}
+n_unique <- function(x) n_distinct(x[!is_blank(x)])
+n_unique(records$place_260)
+```
+
+A few numbers stand out already:
+
+- `r format(n_unique(records$place_260), big.mark = ",")` different places
+  of publication, although Finland had only a few dozen printing towns;
+- `r format(n_unique(records$publisher), big.mark = ",")` different
+  publishers;
+- `r format(n_unique(records$language_041), big.mark = ",")` different
+  "languages";
+- about a third of the records have no author, and almost a third have no
+  place in field 260.
+
+Let's take the fields one by one.
+
+## Regular expressions: a quick reference
+
+We clean text with **regular expressions** (regex), small patterns that
+describe text:
+
+- `grepl(pattern, x)`: does each value **contain** the pattern? (`TRUE`/`FALSE`)
+- `sub(pattern, replacement, x)`: replace the **first** match;
+  `gsub()` replaces **all** matches.
+
+| Pattern | Meaning | Example | Matches |
+|---------|---------|---------|---------|
+| `^` / `$` | start / end of the text | `^Hels` | "**Hels**inki" |
+| `.` | any character | `H.lsinki` | "Helsinki", "Hälsinki" |
+| `[abc]` | one of these characters | `[,.:]` | a comma, full stop or colon |
+| `\\s` | a space | `\\s*:` | ":", " :", "   :" |
+| `+` / `*` | one or more / zero or more | `[,.]+$` | ",", ".," at the end |
+| `a\|b` | a or b | `Turku\|Åbo` | "Turku" or "Åbo" |
+| `( )` and `\\1` | capture a group, and reuse it | `^([0-9]{4})-.*` | "1818-1898" → "1818" |
+| `\\b` | word boundary | `\\bförf\\b` | "förf", not "förfat" |
+
+Characters such as `[ ] . | ( )` have special meanings; to match them
+literally, escape them (`\\[`, `\\.`) or put them inside brackets (`[|]`).
+
+```{r}
+places <- c("Helsinki :", "[Helsinki] :", "Turku,", "Helsingfors :")
+gsub("\\s*[:,]$", "", places)   # remove a final colon or comma
+gsub("\\[|\\]", "", places)     # remove square brackets
+```
+
+## 1. Language
+
+```{r}
+records |> count(language_041, sort = TRUE) |> head(12)
+```
+
+The values are three-letter **MARC language codes** (`fin` Finnish, `swe`
+Swedish, `lat` Latin, `ger` German, …). Several languages are joined with
+`|`, which is why there are so many "languages". How many records are
+multilingual, and how many have no code at all?
+
+```{r}
+sum(grepl("|", records$language_041, fixed = TRUE))
+sum(is_blank(records$language_041))
+```
+
+`fixed = TRUE` treats `|` as plain text rather than as "or". We keep the
+first code, the **primary language**:
+
+```{r}
+primary_041 <- sub("[|].*", "", records$language_041)
+n_unique(records$language_041)
+n_unique(primary_041)
+```
+
+### A second source: field 008
+
+The language is recorded **twice** in a MARC record: in field 041 and inside
+the fixed-length field 008 (positions 36–38). Two independent records of the
+same thing are valuable: we can fill gaps, and we can check one against the
+other.
+
+```{r}
+mean(primary_041 == records$language_008, na.rm = TRUE)
+
+records |>
+  mutate(primary_041 = primary_041) |>
+  filter(primary_041 != language_008) |>
+  count(primary_041, language_008, sort = TRUE) |>
+  head(6)
+```
+
+The two agree for more than 99.5% of the records. Most disagreements are
+books that 041 calls Finnish and 008 calls `mul` (multiple languages). And
+the records without field 041?
+
+```{r}
+records |>
+  filter(is_blank(language_041)) |>
+  count(language_008, sort = TRUE) |>
+  head(6)
+```
+
+For about half of them, field 008 has a language code; the rest are blank
+(`"   "`) or not coded (`|||`). Notice also that more of the recovered
+records are Swedish than Finnish: a gap in one field is not spread evenly
+over the languages. We use 041 when it exists and 008 otherwise. `coalesce()` from dplyr takes the first non-missing value.
+Codes like `|||` ("not coded"), `und` ("undetermined") and blanks are not
+languages, so we make them `NA`:
+
+```{r}
+language_code <- coalesce(primary_041, records$language_008)
+language_code[language_code %in% c("|||", "und") | is_blank(language_code)] <- NA
+sum(is.na(language_code))
+```
+
+### From codes to names with a lookup table
+
+To translate codes into names we use a **lookup table**: the file
+`language_abbreviations.csv` from the
+[fennica](https://github.com/fennicahub/fennica) R package, which was used to
+harmonise the Fennica data. `match(x, table)` returns, for each value of `x`,
+its position in `table`:
+
+```{r}
+language_table <- read.csv("data/language_abbreviations.csv", sep = "\t")
+head(language_table, 3)
+
+language <- language_table$name[match(language_code, language_table$synonyme)]
+sort(table(language), decreasing = TRUE)[1:6]
+```
+
+A lookup table is easier to read, check and extend than a long chain of
+`gsub()` calls. It is also **data**, which can be shared and corrected
+independently of the code.
+
+### Writing it as a function
+
+We will want to repeat these steps on new exports of the catalogue, so we
+collect them into a function:
+
+```{r}
+harmonise_language <- function(code_041, code_008, lookup) {
+  code <- coalesce(sub("[|].*", "", code_041), code_008)
+  code[code %in% c("|||", "und") | is_blank(code)] <- NA
+  lookup$name[match(code, lookup$synonyme)]
+}
+
+language <- harmonise_language(records$language_041, records$language_008,
+                               language_table)
+```
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 1: Bilingual publications
+
+Make a logical variable `multilingual` that is `TRUE` when field 041 has more
+than one language code. Which language combinations are the most common
+among the multilingual records? What would you lose for the running question
+if you kept only the primary language?
+
+:::::::::::::::::::::::: solution
+
+```{r}
+multilingual <- grepl("|", records$language_041, fixed = TRUE)
+sum(multilingual)
+
+records |>
+  filter(multilingual) |>
+  count(language_041, sort = TRUE) |>
+  head(5)
+```
+
+Finnish–Swedish publications (both orders) are by far the most common. They
+are exactly the books where the language shift becomes visible: official
+announcements and textbooks printed in both languages. Keeping only the
+primary language turns them into "Finnish" or "Swedish" depending on which
+was listed first. That is why we keep `multilingual` as a separate variable.
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## 2. Place of publication
+
+```{r}
+records |> count(place_260, sort = TRUE) |> head(15)
+```
+
+Several problems appear at once:
+
+- cataloguing punctuation (`Helsinki :`): it separates MARC subfields and is
+  not part of the name;
+- square brackets (`[Helsinki] :`): the place is not printed in the book but
+  was added by the cataloguer;
+- **different languages**: Helsinki is *Helsingfors* in Swedish, Turku is
+  *Åbo*, Porvoo is *Borgå*;
+- **inflected forms**: *Helsingissä* means "in Helsinki";
+- non-places: *[Kustannuspaikka tuntematon]* ("place unknown"), *[S.l.]*
+  (*sine loco*, "without place").
+
+How many ways are there to write Helsinki?
+
+```{r}
+helsinki_like <- grep("^\\[?(Hels|Gels)", records$place_260, value = TRUE)
+n_unique(helsinki_like)
+head(sort(table(helsinki_like), decreasing = TRUE), 12)
+```
+
+`grep(..., value = TRUE)` returns the matching values themselves. Notice
+also `Helsingborg`, a town in **Sweden**: always look at what a pattern
+matches before trusting it.
+
+### Cleaning the text
+
+We write a function that removes the formal noise (punctuation, brackets,
+extra spaces), keeps the first place when there are several, and converts to
+lower case:
+
+```{r}
+clean_place_text <- function(x) {
+  x <- sub("[|].*", "", x)                 # keep the first place
+  x <- gsub("\\[|\\]|\"", "", x)           # brackets and quotes
+  x <- gsub("\\s*[:;,.]+\\s*$", "", x)     # final punctuation
+  x <- str_squish(x)                       # extra spaces
+  tolower(x)
+}
+
+place_text <- clean_place_text(records$place_260)
+n_unique(records$place_260)
+n_unique(place_text)
+```
+
+### Harmonising names with a synonym table
+
+Merging the remaining variants (Helsingfors → Helsinki, Åbo → Turku, …) with
+one `grepl()` line per town would never end. The fennica package keeps a
+**synonym table**, `PublicationPlaceSynonymes.csv`, with known spellings
+(`synonyme`) and the standard name (`name`), collected over years of work:
+
+```{r}
+place_synonyms <- read.csv("data/PublicationPlaceSynonymes.csv", sep = ";")
+nrow(place_synonyms)
+place_synonyms |> filter(name == "Helsinki") |> nrow()
+place_synonyms |> filter(name == "Turku") |> pull(synonyme) |> head(15)
+```
+
+Many entries are written without special characters (`abo`, `borga`), because
+the fennica pipeline replaces å, ä and ö before the lookup. We do the same
+with `chartr()`, which replaces characters one by one, and look up both the
+original and the simplified form:
+
+```{r}
+fold <- function(x) chartr("åäöüé", "aaoue", x)
+
+lookup_place <- function(x, synonyms) {
+  position <- coalesce(match(x, synonyms$synonyme),
+                       match(fold(x), synonyms$synonyme))
+  synonyms$name[position]
+}
+
+place <- lookup_place(place_text, place_synonyms)
+n_unique(place_text)
+n_unique(place)
+sort(table(place), decreasing = TRUE)[1:10]
+```
+
+One lookup merges hundreds of variants. Which frequent values were **not**
+found?
+
+```{r}
+tibble(place_text, place) |>
+  filter(is.na(place), !is.na(place_text)) |>
+  count(place_text, sort = TRUE) |>
+  head(8)
+```
+
+First the "unknown place" phrases, which should be missing values anyway.
+Then Russian transliterations (`s.-peterburg`, `gel'singfors`) and towns
+in the United States such as Hancock, Michigan, where Finnish emigrants ran
+their own printing presses. A synonym table is never finished: when you find
+missing entries like these, you add rows to the table, not code.
+
+### Applying a function to unique values only
+
+Our cleaning functions look at every record, but there are only
+`r format(n_unique(records$place_260), big.mark = ",")` different values
+for `r format(nrow(records), big.mark = ",")` records. The fennica functions
+therefore clean each **unique** value once and map the result back to all
+records with `match()`. We can write this pattern as a general helper:
+
+```{r}
+map_unique <- function(x, f, ...) {
+  values <- unique(x)
+  f(values, ...)[match(x, values)]
+}
+
+place <- map_unique(clean_place_text(records$place_260),
+                    lookup_place, place_synonyms)
+```
+
+The result is identical, but for slow functions (and millions of records) the
+difference in speed is enormous.
+
+### A second place field: 264
+
+Almost a third of the records have no field 260. Newer cataloguing rules
+(RDA) record the place in field **264** instead:
+
+```{r}
+sum(is_blank(records$place_260))
+sum(is_blank(records$place_260) & !is_blank(records$place_264))
+```
+
+So we can fill most of the gaps from 264, just like we filled the language
+from 008:
+
+```{r}
+place_combined <- map_unique(
+  clean_place_text(coalesce(records$place_260, records$place_264)),
+  lookup_place, place_synonyms)
+
+sort(table(place_combined), decreasing = TRUE)[1:6]
+```
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 2: A surprising printing centre
+
+After adding field 264, **Mikkeli**, a small town in eastern Finland,
+suddenly becomes one of the largest publishing places in the country. Is that
+plausible? Look at the raw records of these publications: their `place_264`,
+`extent` and `field_008`. What is going on, and how should we handle these
+records?
+
+Hint: in field 008, position 7 is the type of date, and positions 8–11 the
+first date.
+
+:::::::::::::::::::::::: solution
+
+```{r}
+from_mikkeli <- is_blank(records$place_260) & grepl("Mikkeli", records$place_264)
+sum(from_mikkeli)
+
+records |>
+  filter(from_mikkeli) |>
+  count(online = grepl("verkkoaineisto", extent),
+        date_type = substr(field_008, 7, 7),
+        sort = TRUE) |>
+  head(4)
+
+records |>
+  filter(from_mikkeli, grepl("verkkoaineisto", extent)) |>
+  transmute(place_264, extent, date_type = substr(field_008, 7, 7),
+            date1 = substr(field_008, 8, 11), date2 = substr(field_008, 12, 15)) |>
+  head(4)
+```
+
+Almost all of them have the extent *verkkoaineisto* ("online resource") and
+the date type `r` (reproduction): the first date is in the 2010s or 2020s,
+and the second date is the original 19th-century year. These records
+describe **digitised copies**. The National Library of Finland's digitisation
+centre is in Mikkeli, so field 264 gives the place of **digitisation**, not of
+printing! The 19th-century place of publication is simply not recorded.
+The honest value is `NA`:
+
+```{r}
+digitised_copy <- from_mikkeli & grepl("verkkoaineisto", records$extent)
+place_combined[digitised_copy] <- NA
+sort(table(place_combined), decreasing = TRUE)[1:6]
+```
+
+Field 260 also has a few hundred books really printed in Mikkeli; they are
+not affected, because they have a field 260.
+
+This is the most important lesson of the episode: a field can be perfectly
+clean and still **measure something else** than you think.
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+We put the place steps together in one function:
+
+```{r}
+harmonise_place <- function(place_260, place_264, extent, synonyms) {
+  digitised_copy <- is_blank(place_260) & grepl("Mikkeli", place_264) &
+    grepl("verkkoaineisto", extent)
+  place_264[digitised_copy] <- NA
+  map_unique(clean_place_text(coalesce(place_260, place_264)),
+             lookup_place, synonyms)
+}
+
+place <- harmonise_place(records$place_260, records$place_264,
+                         records$extent, place_synonyms)
+```
+
+## 3. Publisher
+
+```{r}
+records |> count(publisher, sort = TRUE) |> head(12)
+```
+
+The same kinds of problems again, plus two special values: *[kustantaja
+tuntematon]* ("publisher unknown") and *Tekijä* ("the author"), meaning that
+the author published the book. Look at one large publisher, Werner Söderström
+(today WSOY):
+
+```{r}
+records |>
+  filter(grepl("Söderström|WSOY", publisher)) |>
+  count(publisher, sort = TRUE) |>
+  head(8)
+```
+
+Our place-cleaning function already does most of the work. We add rules for
+distributors and for the largest publishers:
+
+```{r}
+harmonise_publisher <- function(x) {
+  x <- clean_place_text(x)
+  x <- gsub(",? *(i )?(distr\\.?|jakaja)$", "", x)
+  case_when(
+    grepl("tuntematon|^s\\.? ?n$", x)                     ~ NA,
+    grepl("^(tekijä|tekijät|förf|författare|författaren)$", x) ~ "Self-published",
+    grepl("söderström|wsoy", x)                           ~ "WSOY",
+    grepl("otava", x)                                     ~ "Otava",
+    grepl("edlund", x)                                    ~ "Edlund",
+    grepl("^(suomalaisen kirjallisuuden seura|sks)\\b", x) ~ "SKS",
+    grepl("frenckell", x)                                 ~ "Frenckell",
+    .default = str_to_title(x)
+  )
+}
+
+publisher <- map_unique(records$publisher, harmonise_publisher)
+n_unique(records$publisher)
+n_unique(publisher)
+sort(table(publisher), decreasing = TRUE)[1:8]
+```
+
+`case_when()` tests the conditions in order and uses the first one that is
+`TRUE`; `.default` is used when none is. `[s.n.]` (*sine nomine*, "without
+name") is the Latin way to say "publisher unknown".
+
+### How the Fennica project does it
+
+The real
+[`polish_publisher()`](https://github.com/fennicahub/fennica/blob/master/R/polish_publisher.R)
+contains dozens of rules like ours:
+
+```r
+x <- gsub("\\bförfattaren\\b|\\bförfattare\\b|\\bförf\\b|\\btekijät\\b",
+          "tekijä", x, perl = TRUE)
+x <- gsub("\\bsöderstörm\\b", "söderström", x, perl = TRUE)  # a typo
+x <- gsub("\\bwerner söderström oy\\b", "wsoy", x, perl = TRUE)
+```
+
+`\\b` is a **word boundary**: it makes sure that `\\bförf\\b` matches the
+abbreviation *förf*, but not the start of a longer word:
+
+```{r}
+words <- c("förf", "förf.", "förfat", "en förf")
+grepl("förf", words)
+grepl("\\bförf\\b", words)
+```
+
+::::::::::::::::::::::::::::::::::::: callout
+
+### When to stop cleaning?
+
+Thousands of publisher names remain, most of them small printing houses that
+appear once or twice. A good rule: clean what affects **your research
+question**, usually the frequent values, and **document** what you left as
+it is.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## 4. Author
+
+```{r}
+records |> count(author, sort = TRUE) |> head(8)
+```
+
+The names end with cataloguing punctuation, so the same person appears as
+`Runeberg, Johan Ludvig,` and `Runeberg, Johan Ludvig.`:
+
+```{r}
+clean_author <- function(x) str_squish(gsub("[,.]+$", "", x))
+
+author <- clean_author(records$author)
+n_unique(records$author)
+n_unique(author)
+```
+
+### Name strings are not persons
+
+Regex can remove punctuation, but it cannot tell us **who** a name refers to.
+Look at the Runebergs:
+
+```{r}
+records |>
+  filter(grepl("^Runeberg", author)) |>
+  count(author, asteri_id)
+```
+
+The column `asteri_id` is the person's identifier in **Asteri**, the Finnish
+national authority file. It tells us that *Johan Ludvig* (the national poet),
+*Johan Wilhelm* (his son), *Fredrika* (his wife) and *Nino* are different
+people. It also shows a limit: `Runeberg, J. L.` has no identifier, so
+nothing in the data says for certain that it is the poet.
+
+The identifier also separates people who share **the same name**:
+
+```{r}
+records |>
+  filter(grepl("^Dumas, Alexandre", author)) |>
+  count(author = clean_author(author), asteri_id, author_date)
+```
+
+Alexandre Dumas the father (1802–1870, *The Three Musketeers*) and the son
+(1824–1895, *The Lady of the Camellias*) have exactly the same name string.
+When an identifier exists, it is the better way to count persons:
+
+```{r}
+has_id <- !is.na(records$asteri_id)
+mean(has_id)
+n_unique(author[has_id])
+n_unique(records$asteri_id[has_id])
+```
+
+Among the records that have an identifier, there are slightly **more**
+persons than name strings: identical names hide different people. For the
+other half of the records we only have the string.
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 3: Anonymous books
+
+About a third of the records have no author. Use `records` and the `language`
+variable to calculate the share of records **without** an author for each
+of the five most common languages. Is a missing author equally likely in
+every language? Why might that matter for the running question?
+
+:::::::::::::::::::::::: solution
+
+```{r}
+records |>
+  mutate(language = language, no_author = is_blank(author)) |>
+  filter(language %in% c("Finnish", "Swedish", "Latin", "German", "Russian")) |>
+  group_by(language) |>
+  summarise(records = n(), pct_no_author = round(100 * mean(no_author), 1))
+```
+
+Latin and German publications (often academic dissertations) almost always
+have an author; Finnish, Swedish and Russian ones much less often (official
+publications, hymn books, almanacs, popular prints). If we analysed only
+records with a known author, we would look at a **selected** part of the
+bibliography. We come back to this in the next episode.
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## Putting it together: a reproducible pipeline
+
+We now have one function per field. A final function applies them all and
+returns one analysis-ready table:
+
+```{r}
+harmonise_records <- function(records, language_table, place_synonyms) {
+  records |>
+    transmute(
+      id,
+      author       = clean_author(author),
+      author_id    = asteri_id,
+      language     = harmonise_language(language_041, language_008, language_table),
+      multilingual = grepl("|", language_041, fixed = TRUE),
+      place        = harmonise_place(place_260, place_264, extent, place_synonyms),
+      publisher    = map_unique(publisher, harmonise_publisher)
+    )
+}
+
+fennica_ours <- harmonise_records(records, language_table, place_synonyms)
+glimpse(fennica_ours)
+```
+
+How much did harmonisation reduce the variation?
+
+```{r}
+tibble(
+  field = c("author", "language", "place", "publisher"),
+  raw = c(n_unique(records$author), n_unique(records$language_041),
+          n_unique(records$place_260), n_unique(records$publisher)),
+  harmonised = c(n_unique(fennica_ours$author), n_unique(fennica_ours$language),
+                 n_unique(fennica_ours$place), n_unique(fennica_ours$publisher))
+)
+```
+
+Language and place became much tidier; author and publisher improved less,
+because much of their variation is real (there really were thousands of
+authors and printers), and the rest needs external knowledge such as
+authority files.
+
+::::::::::::::::::::::::::::::::::::: callout
+
+### Keep the pipeline in a script
+
+Save all the functions in one script, for example `harmonise_fennica.R`, and
+run it from the raw data every time. Never edit the raw data by hand. When
+the library publishes a new export, or when you find a new problem (like
+Mikkeli), you fix the script and rerun it, and every result downstream is
+updated. Our version is here: [`harmonise_fennica.R`](files/harmonise_fennica.R).
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+We save the result for the next episode:
+
+```{r, eval = FALSE}
+write_ipc_file(fennica_ours, "data/fennica_ours.feather")
+```
+
+::::::::::::::::::::::::::::::::::::: keypoints
+
+- Start with a profile of the data: unique values, missing values and the most common forms.
+- Cataloguing punctuation, brackets and abbreviations are formal noise that regex can remove.
+- Lookup and synonym tables translate codes and merge variants; they are data that can be shared and corrected.
+- The same information is often recorded in several MARC fields (041 and 008, 260 and 264); combine them with `coalesce()`, but check what each field really records.
+- A clean value can still measure the wrong thing: for digitised copies, field 264 gives the place of digitisation.
+- Name strings are not persons; authority identifiers are needed to tell people apart.
+- Write each harmonisation step as a function and run the whole pipeline from the raw data.
+
+::::::::::::::::::::::::::::::::::::::::::::::::

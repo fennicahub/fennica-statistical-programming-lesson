@@ -1,0 +1,447 @@
+---
+title: "Validation: How Far Can We Trust the Harmonised Data?"
+teaching: 45
+exercises: 25
+---
+
+:::::::::::::::::::::::::::::::::::::: questions
+
+- How do we check that a harmonisation did what we intended?
+- How do we compare two harmonisations of the same records?
+- When do data problems change the answer to a research question?
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: objectives
+
+- Write validation rules as code and collect the results in a report.
+- Compare our harmonisation with the Fennica project's version, field by field.
+- Use disagreements to find errors in both versions.
+- Show that missing values in bibliographic data are not random.
+- Test how sensitive a result is to cleaning and selection decisions.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+```{r setup, include = FALSE}
+library(ggplot2)
+library(tidyr)
+source("files/harmonise_fennica.R")
+```
+
+## Why validate?
+
+In the previous episode we built our own harmonised variables: language,
+place, publisher and author. Every step was a decision, and some decisions
+will be wrong for some records. **Validation** means checking, systematically
+and with code, how good the result is. We use three kinds of checks:
+
+1. **Rules**: conditions that every value should meet ("a place name has no
+   punctuation left").
+2. **Comparison**: an independent harmonisation of the same records, here the
+   one made by the Fennica project.
+3. **Consequences**: do the remaining problems change the answer to our
+   question, *how did the shift from Swedish to Finnish happen?*
+
+We start where the previous episode ended. If you don't have `records` and
+`fennica_ours` in your session any more, download
+[`harmonise_fennica.R`](files/harmonise_fennica.R) into your project folder
+and run it:
+
+```{r, eval = FALSE}
+source("harmonise_fennica.R")
+```
+
+We also load the Fennica project's harmonised data:
+
+```{r}
+fennica <- read_ipc_file("data/harmonized_fennica19.feather")
+```
+
+## 1. Validation rules
+
+A validation rule is a logical test that should be `TRUE` for every record.
+It's useful to write them so that they return the records that **fail**, and
+then count them. A small helper function makes a one-row report for each
+rule:
+
+```{r}
+check <- function(rule, failing) {
+  tibble(rule = rule, n_failing = sum(failing, na.rm = TRUE))
+}
+
+check("author has no digits", grepl("[0-9]", fennica_ours$author))
+```
+
+We collect many rules into one report with `bind_rows()`:
+
+```{r}
+validation_report <- bind_rows(
+  check("id is unique",
+        duplicated(fennica_ours$id)),
+  check("language is a known language name",
+        !is.na(fennica_ours$language) &
+          !fennica_ours$language %in% language_table$name),
+  check("author has no digits",
+        grepl("[0-9]", fennica_ours$author)),
+  check("author has no brackets",
+        grepl("[][()]", fennica_ours$author)),
+  check("author has no final punctuation",
+        grepl("[,.;:]$", fennica_ours$author)),
+  check("publisher is longer than three characters",
+        nchar(fennica_ours$publisher) <= 3)
+)
+validation_report
+```
+
+Some rules pass, others don't. Let's look at the failures:
+
+```{r}
+fennica_ours |>
+  filter(grepl("[0-9]|[][()]", author)) |>
+  count(author, sort = TRUE) |>
+  head(8)
+```
+
+Each failure is a different kind of problem. `Daniel Henkikäsi, numero 3`
+is a pseudonym, and the number really is part of it. In
+`Lindroth, Hjalmar,|1878-1947` the years of life ended up in the name field:
+our `clean_author()` should keep only the part before `|`. And `1. 2. 3` is
+not a name at all. When a validation rule fails, we go back to the **raw**
+record:
+
+```{r}
+raw |>
+  filter(grepl("^[0-9]+\\. [0-9]+\\. [0-9]+", author_name)) |>
+  select(id, author_name, title)
+```
+
+Six records of the same title, *Ett rim efter omständigheterna*, have
+numbers in the author field: probably parts or verses that were catalogued
+separately. This cannot be fixed with a rule; it is a case for a
+**correction list** (a table of `id`s and corrected values), which the
+pipeline applies after the automatic steps.
+
+The short publishers are even more interesting:
+
+```{r}
+fennica_ours |>
+  filter(nchar(publisher) <= 3) |>
+  count(publisher, sort = TRUE)
+```
+
+`SKS` is our own abbreviation, so that rule was too strict. But `S.l` and
+`S.a` (*sine loco*, "without place", and *sine anno*, "without year") are not
+publishers: the cataloguer put them in the wrong subfield. `Utg` (*utgivare*,
+"publisher") is just the word "publisher". Validation finds problems that
+were invisible in the frequency tables, and improves the rules
+themselves.
+
+::::::::::::::::::::::::::::::::::::: callout
+
+### Hard and soft rules
+
+Some rules must **never** fail, for example that every `id` is unique. For
+them, make the script stop with an error, so that a broken export can never
+silently reach the analysis. `stopifnot()` does exactly that:
+
+```{r}
+stopifnot("ids must be unique" = !anyDuplicated(fennica_ours$id),
+          "one row per raw record" = nrow(fennica_ours) == nrow(records))
+```
+
+Other rules are **soft**: a few failures are expected, and we report them
+instead. Keep both kinds in the pipeline script, and run them every time the
+data is rebuilt.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 1: How much did the synonym table miss?
+
+Write a rule that counts the records where a place **was** recorded in the
+raw data, but our harmonised `place` is `NA`. (Hint: use
+`clean_place_text(coalesce(records$place_260, records$place_264))`, and
+remember that we deliberately removed the digitised copies from Mikkeli.)
+What are the most common unmatched values? Which of them should be added to
+the synonym table, and which should stay `NA`?
+
+:::::::::::::::::::::::: solution
+
+```{r}
+digitised_copy <- is_blank(records$place_260) &
+  grepl("Mikkeli", records$place_264) &
+  grepl("verkkoaineisto", records$extent)
+
+place_text <- clean_place_text(coalesce(records$place_260,
+                                        ifelse(digitised_copy, NA, records$place_264)))
+unmatched <- !is.na(place_text) & is.na(fennica_ours$place)
+
+check("recorded place was not matched", unmatched)
+head(sort(table(place_text[unmatched]), decreasing = TRUE), 12)
+```
+
+"Place unknown" (*kustannuspaikka tuntematon*, *s.l.*) should stay `NA`.
+Russian forms of St Petersburg and Helsinki (`s.-peterburg`,
+`gel'singfors`), Danish Copenhagen (`kjøbenhavn`, `københavn`), the Latin
+`aboæ` (Turku), and the Finnish emigrant presses in the United States should
+be added to the synonym table.
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## 2. Comparing two harmonisations
+
+The Fennica project harmonised the same records with its own code. The two
+versions were made independently, so where they **agree** we can be more
+confident, and where they **disagree** at least one of them is wrong. We
+join the two by `id`:
+
+```{r}
+comparison <- fennica_ours |>
+  left_join(
+    fennica |>
+      select(id,
+             their_language = language_original_primary,
+             their_place = publication_place,
+             their_publisher = publisher,
+             their_author = author_name_100,
+             year = publication_year,
+             decade = publication_decade),
+    by = "id")
+```
+
+A function for the share of records where both versions have a value and the
+values are the same (ignoring upper and lower case):
+
+```{r}
+agreement <- function(ours, theirs) {
+  mean(tolower(ours) == tolower(theirs), na.rm = TRUE)
+}
+```
+
+### Language
+
+```{r}
+agreement(comparison$language, comparison$their_language)
+
+comparison |>
+  count(ours_missing = is.na(language), theirs_missing = is.na(their_language))
+```
+
+Where both have a value they agree completely. But we have a language for
+`r sum(!is.na(comparison$language) & is.na(comparison$their_language))`
+records where the project version has none: those are the records without
+field 041, which we filled from field 008.
+
+### Place and publisher
+
+```{r}
+agreement(comparison$place, comparison$their_place)
+agreement(comparison$publisher, comparison$their_publisher)
+```
+
+Almost no agreement at all! Something must be very different. Let's look at
+a few records side by side:
+
+```{r}
+comparison |>
+  select(place, their_place, publisher, their_publisher) |>
+  filter(!is.na(place), !is.na(publisher)) |>
+  head(5)
+```
+
+The project's `publication_place` column contains publishers, and its
+`publisher` column contains places: the two columns were **swapped** during
+harmonisation. In the raw data (fields 260a and 260b) they are correct.
+Comparing the other way round:
+
+```{r}
+agreement(comparison$place, comparison$their_publisher)
+agreement(comparison$publisher, comparison$their_place)
+```
+
+Better, but still far from complete. What are the most common disagreements
+in place?
+
+```{r}
+comparison |>
+  filter(tolower(place) != tolower(their_publisher)) |>
+  count(place, their_place = their_publisher, sort = TRUE) |>
+  head(8)
+```
+
+The project's version keeps the **language of the name**: Helsingfors and
+Helsinki, Åbo and Turku are separate values. That is not wrong, but it is a
+different decision, and it matters a lot, as we will see below.
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 2: A publisher called Turku
+
+The project's publisher column (remember: `their_place` after the swap)
+contains the value `Turku` for
+`r sum(comparison$their_place == "Turku", na.rm = TRUE)` records. Turku is
+a town, not a publisher. Find out which publishers in **our** version these
+records have. Is it our error or theirs?
+
+:::::::::::::::::::::::: solution
+
+```{r}
+comparison |>
+  filter(their_place == "Turku") |>
+  count(publisher, sort = TRUE) |>
+  head(8)
+```
+
+The raw publishers are societies with names like *Svenska
+Litteratursällskapet i Finland*, and a few with *Åbo* in their name. A rule
+in the project's harmonisation turned them into the town name Turku. It is an
+error in the project version, which we found only because we had an
+independent version to compare with.
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+### Author
+
+```{r}
+agreement(comparison$author, comparison$their_author)
+
+comparison |>
+  filter(tolower(author) != tolower(their_author)) |>
+  count(author, their_author, sort = TRUE) |>
+  head(6)
+```
+
+Most differences are a matter of style: the project's
+[`polish_author()`](https://github.com/fennicahub/fennica/blob/master/R/polish_author.R)
+removes all full stops from initials (`E N` instead of `E. N`). But look at
+*Thomas Ragvaldinpoika*: a patronymic (*-poika* = "son of"), correctly
+catalogued with the given name first, which the project version reverses
+into `Ragvaldinpoika, Thomas`, as if it were a surname. Rules written for modern names do not fit
+every name.
+
+## 3. Missing values are not random
+
+So far we have asked whether the values are **right**. Just as important is
+which values are **missing**. Compare Finnish and Swedish publications:
+
+```{r}
+comparison |>
+  filter(language %in% c("Finnish", "Swedish")) |>
+  group_by(language) |>
+  summarise(records = n(),
+            no_place = mean(is.na(place)),
+            no_publisher = mean(is.na(publisher)),
+            no_author = mean(is_blank(author)))
+```
+
+A Swedish publication is much more likely than a Finnish one to have no
+publisher and no place. The missing values are **not random**: whether a
+value is missing depends on the very thing we want to study. Any analysis
+that silently drops the incomplete records will be biased.
+
+## 4. Does it change the answer?
+
+The final and most important validation question is: **do these problems
+change our conclusions?** We calculate the share of Finnish publications per
+decade on four different subsets of the data, the kind of subsets that
+appear automatically when an analysis uses one more variable:
+
+```{r}
+finnish_share <- comparison |>
+  filter(!is.na(decade), !is.na(language)) |>
+  group_by(decade) |>
+  summarise(
+    `all records`          = mean(language == "Finnish"),
+    `place known`          = mean(language[!is.na(place)] == "Finnish"),
+    `publisher known`      = mean(language[!is.na(publisher)] == "Finnish"),
+    `author known`         = mean(language[!is_blank(author)] == "Finnish")
+  )
+
+finnish_share
+```
+
+`language[!is.na(place)]` takes the languages only of the records where the
+place is known. A plot makes the differences easier to see:
+
+```{r finnish-share-by-subset, fig.alt = "Line chart of the share of Finnish-language publications per decade, 1800s to 1910s, calculated on four subsets of the data. All four lines rise from under 10% to about 65%, but the line for records with a known publisher is clearly higher from the 1840s to the 1880s, and the lines diverge strongly in the early decades."}
+finnish_share |>
+  pivot_longer(-decade, names_to = "subset", values_to = "share") |>
+  ggplot(aes(x = decade, y = share, colour = subset)) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "Decade", y = "Share of Finnish publications", colour = "Records used")
+```
+
+The overall story is the same in every version: Finnish rises from almost
+nothing to about two thirds of all publications. But the **size** and the
+**timing** of the shift depend on the subset. Among records with a known
+publisher, Finnish already passes 50% in the 1850s; among all records, only
+in the 1870s. In the early decades, where there are few records, the lines
+jump around wildly. That uncertainty is what the next parts of this course
+are about.
+
+(The high value for the 1810s is a puzzle of its own. It comes from the
+publication dates, which we examine in a later episode.)
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 3: The language of a place name
+
+Use `records` and `fennica_ours` to calculate the share of Finnish
+publications among the records whose raw field 260 says exactly
+`Helsinki :` and among those that say `Helsingfors :`. What does this tell
+you about using the **raw** place name in an analysis of language? And what
+does it tell you about the project version, which keeps Helsinki and
+Helsingfors apart?
+
+:::::::::::::::::::::::: solution
+
+```{r}
+tibble(place_260 = records$place_260, language = fennica_ours$language) |>
+  filter(place_260 %in% c("Helsinki :", "Helsingfors :")) |>
+  group_by(place_260) |>
+  summarise(records = n(), finnish = mean(language == "Finnish", na.rm = TRUE))
+```
+
+Almost all books with *Helsinki* are in Finnish, and almost all books with
+*Helsingfors* in Swedish: the place name is copied from the title page, so it
+is written **in the language of the book**. In the project version, "Helsinki"
+and "Helsingfors" therefore look like two different towns with opposite
+languages. A model that tried to "explain" the language with this place
+variable would find a perfect but meaningless relationship, because the
+variable is partly the outcome itself. Harmonising the place names is
+necessary before place can be used to study language.
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## Validation as part of the pipeline
+
+Validation is not a one-off check but part of the workflow:
+
+1. **Profile** the raw data.
+2. **Harmonise** with functions and lookup tables.
+3. **Validate** with rules, comparisons and sensitivity checks.
+4. Fix the rules or the tables, and **rerun** everything from the raw data.
+
+Save the validation report together with the data, so that anyone using the
+data can see what was checked:
+
+```{r, eval = FALSE}
+write.csv(validation_report, "data/validation_report.csv", row.names = FALSE)
+```
+
+::::::::::::::::::::::::::::::::::::: keypoints
+
+- Validation rules are logical tests written as code; count the records that fail and inspect them in the raw data.
+- Use `stopifnot()` for rules that must never fail, and a report for rules that may.
+- Two independent harmonisations of the same records are a powerful check: disagreements reveal errors in both.
+- The Fennica project's harmonised data has swapped place and publisher columns and keeps language-specific place names.
+- Missing values in bibliographic data are not random: Swedish publications lack a publisher or place more often than Finnish ones.
+- Always test whether cleaning and selection decisions change the answer to your research question.
+
+::::::::::::::::::::::::::::::::::::::::::::::::

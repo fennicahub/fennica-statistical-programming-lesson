@@ -1,0 +1,320 @@
+---
+title: "Basic Statistical Analysis"
+teaching: 35
+exercises: 15
+---
+
+:::::::::::::::::::::::::::::::::::::: questions
+
+- How do I describe a numeric variable with summary statistics?
+- How do I measure whether two variables are related?
+- How do I test whether groups differ, and how should I interpret the result?
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: objectives
+
+- Calculate and interpret the mean, median, standard deviation and quantiles.
+- Measure association with a correlation coefficient.
+- Compare two groups with a t-test and a Wilcoxon test.
+- Test the association between two categorical variables with a chi-squared test.
+- Fit and interpret a simple linear regression.
+- Explain why effect size matters more than p-values in large datasets.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+```{r setup, include = FALSE}
+source("files/clean_fennica.R")
+library(tidyr)
+library(ggplot2)
+```
+
+## Getting started
+
+Load the packages and the clean data as in the previous episodes:
+
+```r
+library(arrow)
+library(dplyr)
+library(ggplot2)
+fennica_clean <- read_ipc_file("data/fennica_clean.feather")
+```
+
+Our running question in this episode: **did titles get shorter during the
+19th century?** Early modern books often had very long, descriptive titles.
+We will use the number of words in the title, `title_words`, to find out.
+
+## Describing a variable
+
+The **mean** is the average; the **median** is the middle value when all
+values are sorted:
+
+```{r}
+mean(fennica_clean$title_words)
+median(fennica_clean$title_words)
+```
+
+The mean is much larger than the median. As we saw in the histogram in the
+previous episode, the distribution is **skewed**: a few very long titles pull
+the mean upwards. For skewed data the median is often a better description of
+a "typical" value.
+
+The **standard deviation** describes how spread out values are around the
+mean, and **quantiles** split sorted values into portions:
+
+```{r}
+sd(fennica_clean$title_words)
+quantile(fennica_clean$title_words, probs = c(0.1, 0.25, 0.5, 0.75, 0.9))
+```
+
+Half of the titles have between
+`r quantile(fennica_clean$title_words, 0.25)` and
+`r quantile(fennica_clean$title_words, 0.75)` words (the interquartile range),
+while 10% have more than `r quantile(fennica_clean$title_words, 0.9)` words.
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 1: Describe by period
+
+Compare the median, mean and 90th percentile of `title_words` for records
+published **before 1850** and **from 1900 onwards**.
+
+:::::::::::::::::::::::: solution
+
+```{r}
+fennica_clean |>
+  filter(year < 1850 | year >= 1900) |>
+  mutate(period = if_else(year < 1850, "before 1850", "1900 onwards")) |>
+  group_by(period) |>
+  summarise(
+    median = median(title_words),
+    mean = mean(title_words),
+    p90 = quantile(title_words, 0.9)
+  )
+```
+
+Titles were clearly longer in the early period.
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## Correlation
+
+A **correlation coefficient** measures how strongly two numeric variables are
+related, on a scale from −1 (perfect negative relationship) through 0 (no
+linear relationship) to +1 (perfect positive relationship).
+
+```{r}
+cor(fennica_clean$year, fennica_clean$title_words, use = "complete.obs")
+```
+
+`use = "complete.obs"` skips records where either value is missing.
+The negative value means that later records tend to have shorter titles.
+
+The standard (Pearson) correlation is sensitive to extreme values.
+The **Spearman** correlation uses ranks instead of values and is more robust
+for skewed data:
+
+```{r}
+cor(fennica_clean$year, fennica_clean$title_words,
+    use = "complete.obs", method = "spearman")
+```
+
+::::::::::::::::::::::::::::::::::::: callout
+
+### Correlation is not causation
+
+A correlation only says that two variables vary together. Titles did not get
+shorter *because* time passed: changes in printing, genres, readership and
+cataloguing practice are possible explanations that we would have to
+investigate.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## Comparing two groups
+
+Are Swedish titles longer than Finnish ones?
+
+```{r}
+fi_sv <- fennica_clean |>
+  filter(language %in% c("Finnish", "Swedish"))
+
+fi_sv |>
+  group_by(language) |>
+  summarise(n = n(),
+            mean_words = mean(title_words),
+            median_words = median(title_words))
+```
+
+Swedish titles are longer on average. But could a difference like this arise
+just by chance? A **statistical test** helps us judge this.
+
+The **t-test** compares the means of two groups:
+
+```{r}
+t.test(title_words ~ language, data = fi_sv)
+```
+
+The formula `title_words ~ language` reads "title words *by* language".
+The output gives the two group means, a confidence interval for their
+difference and a **p-value**. The p-value is the probability of seeing a
+difference at least this large *if there were really no difference* between the
+groups. A small p-value (conventionally below 0.05) suggests the difference is
+unlikely to be due to chance alone.
+
+Because `title_words` is very skewed, a **Wilcoxon rank-sum test**, which
+compares ranks instead of means, is a safer choice:
+
+```{r}
+wilcox.test(title_words ~ language, data = fi_sv)
+```
+
+::::::::::::::::::::::::::::::::::::: callout
+
+### Big data, tiny p-values
+
+With tens of thousands of records, even tiny and unimportant differences give
+p-values close to zero. Always look at the **effect size**, i.e. how large the
+difference is in real terms (here: about three words on average, one word in
+the median), and ask whether it is meaningful for your research question.
+
+Also remember that Fennica is not a random sample: it aims to cover *all*
+publications. Statistical tests then tell us whether a pattern is strong
+compared to random variation, not whether it holds in some larger
+"population".
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## Two categorical variables: the chi-squared test
+
+Did Finnish and Swedish publishing differ in what *kind* of books were
+published? Let's compare the share of fiction and non-fiction:
+
+```{r}
+fiction_table <- fi_sv |>
+  filter(!is.na(genre), genre != "Other") |>
+  mutate(fiction = if_else(genre == "Non-fiction", "Non-fiction", "Fiction")) |>
+  select(language, fiction) |>
+  table()
+
+fiction_table
+prop.table(fiction_table, margin = 1)
+```
+
+`prop.table(..., margin = 1)` gives proportions within each row (language).
+The **chi-squared test** asks whether the two variables are independent:
+
+```{r}
+chisq.test(fiction_table)
+```
+
+The very small p-value means the share of fiction is clearly different
+between the languages. As always, look at the proportions above to see *how*
+they differ.
+
+## Simple linear regression
+
+**Linear regression** describes how one variable changes with another by
+fitting a straight line. Let's model how the share of Finnish-language
+publications changed per year:
+
+```{r}
+finnish_share <- fennica_clean |>
+  filter(!is.na(year)) |>
+  group_by(year) |>
+  summarise(share_finnish = mean(language == "Finnish"), n = n())
+
+model <- lm(share_finnish ~ year, data = finnish_share)
+summary(model)
+```
+
+The most important numbers are the **coefficients**:
+
+- The `year` estimate is the **slope**: on average, the share of Finnish
+  grew by about `r round(coef(model)["year"] * 100, 2)` percentage points per
+  year.
+- `R-squared` tells how much of the variation in the share is explained by the
+  line, from 0 (none) to 1 (all).
+
+We can draw the fitted line with `geom_smooth(method = "lm")`:
+
+```{r regression-plot, fig.alt = "Scatter plot of the yearly share of Finnish-language publications from 1809 to 1917, with points rising from near zero to about 0.65 and a straight fitted regression line.", message = FALSE}
+ggplot(finnish_share, aes(x = year, y = share_finnish)) +
+  geom_point(aes(size = n), alpha = 0.5) +
+  geom_smooth(method = "lm") +
+  labs(x = "Year", y = "Share of records in Finnish",
+       size = "Records") +
+  theme_minimal()
+```
+
+::::::::::::::::::::::::::::::::::::: callout
+
+### Check your model
+
+Always plot your data together with the model. A straight line is a strong
+simplification: here, the share grows slowly at first and faster later, and
+years with few records (small points) vary a lot. A model is a summary, not
+the truth.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 2: Titles over time
+
+1. Calculate the **median** number of title words per decade and plot it as a
+   line chart.
+2. Fit a linear regression of `title_words` on `year` using all records. What
+   is the slope, and how would you interpret it?
+3. Look at the `R-squared`. What does it tell you?
+
+:::::::::::::::::::::::: solution
+
+```{r median-title-decade, fig.alt = "Line chart of the median number of title words per decade, falling from the early decades to the 1910s."}
+fennica_clean |>
+  group_by(decade) |>
+  summarise(median_words = median(title_words)) |>
+  ggplot(aes(x = decade, y = median_words)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Decade", y = "Median title words")
+```
+
+```{r}
+title_model <- lm(title_words ~ year, data = fennica_clean)
+coef(title_model)
+summary(title_model)$r.squared
+```
+
+Titles get shorter by about `r abs(round(coef(title_model)["year"], 2))`
+words per year on average, i.e. roughly
+`r abs(round(coef(title_model)["year"] * 10, 1))` words per decade.
+The R-squared is low: year explains only a modest part of the variation in
+title length. Most of the differences between titles are due to other factors,
+such as genre and language.
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## Where to go next
+
+You now have the tools for a complete analysis workflow: loading, cleaning,
+summarising, visualising and testing. Some ideas for further exploration of
+Fennica:
+
+- How did the publishing profiles of Helsinki, Turku and Viipuri differ?
+- Which authors published in both Finnish and Swedish?
+- How did the share of translations or of religious literature change?
+- Combine Fennica with other data, such as population figures, to calculate
+  publications per inhabitant.
+
+::::::::::::::::::::::::::::::::::::: keypoints
+
+- Use the median and quantiles to describe skewed variables; the mean is sensitive to extreme values.
+- `cor()` measures association; Spearman correlation is more robust for skewed data.
+- `t.test()` and `wilcox.test()` compare two groups; `chisq.test()` tests two categorical variables.
+- `lm()` fits a linear regression; the slope tells how much y changes per unit of x.
+- With large datasets, focus on effect sizes and plots, not only on p-values.
+- Correlation is not causation, and every model is a simplification.
+
+::::::::::::::::::::::::::::::::::::::::::::::::

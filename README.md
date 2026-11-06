@@ -1,74 +1,56 @@
-# The Carpentries Workbench Template R Markdown Lesson
+# Statistical Programming for Bibliographic Data Science
 
-This lesson is a template lesson that uses [The Carpentries Workbench][workbench].
+Training Material 6 (Preprocessing, Harmonisation, Validation, Analysis): a
+lesson on statistical programming in R as a reproducible method for
+processing and analysing bibliographic data. The lesson
+uses **Fennica**, the Finnish national bibliography (72,626 records published
+1809–1917), as a running example.
 
-## Note about lesson life cycle stage
-Although the `config.yaml` states the life cycle stage as pre-alpha, **the template is stable and ready to use**. The life cycle stage is preset to `"pre-alpha"` as this setting is appropriate for new lessons initialised using the template.
+The lesson is built with [The Carpentries Workbench][workbench].
 
-## Create a new repository from this template
+## Episodes
 
-To use this template to start a new lesson repository, 
-make sure you're logged into Github.   
-Visit https://github.com/carpentries/workbench-template-rmd/generate
-and follow the instructions.
-Checking the 'Include all branches' option will save some time waiting for the first website build
-when your new repository is initialised.
+1. Introduction to the Course
+2. Meet the Fennica Data
+3. Preprocessing and Harmonisation
+4. Validation
+5. Summarising Data
+6. Visualising Data with ggplot2
+7. Basic Statistical Analysis
 
-If you have any questions, contact [@tobyhodges](https://github.com/tobyhodges)
+## Repository layout
 
-## Configure a new lesson
+| Path | Contents |
+|------|----------|
+| `episodes/` | Lesson episodes (R Markdown) |
+| `episodes/data/harmonized_fennica19.feather` | The dataset used in the lesson (learners download it from [CSC object storage](https://a3s.fi/swift/v1/AUTH_3c0ccb602fa24298a6fe3ae224ca022f/fennica-container/output.tables/harmonized_fennica19.feather)) |
+| `episodes/data/priority_fields19.feather` | Raw catalogue records (learners download it from [CSC object storage](https://a3s.fi/swift/v1/AUTH_3c0ccb602fa24298a6fe3ae224ca022f/fennica-container/priority_fields19.feather)) |
+| `episodes/files/harmonise_fennica.R` | Harmonisation pipeline from the raw records |
+| `episodes/files/clean_fennica.R` | Prepares the project's harmonised data for the analysis episodes |
+| `learners/` | Setup instructions and glossary |
+| `instructors/` | Notes for instructors |
+| `profiles/` | Learner profiles |
+| `config.yaml` | Lesson configuration |
 
-Follow the steps below to
-complete the initial configuration of a new lesson repository built from this template:
+## Building the lesson locally
 
-1. **Make sure GitHub Pages is activated:**
-   navigate to _Settings_,
-   select _Pages_ from the left sidebar,
-   and make sure that `gh-pages` is selected as the branch to build from.
-   If no `gh-pages` branch is available, check _Actions_ to see if the first
-   website build workflows are still running.
-   The branch should become available when those have completed.
-1. **Adjust the `config.yaml` file:**
-   this file contains global parameters for your lesson site.
-   Individual fields within the file are documented with comments (beginning with `#`)
-   At minimum, you should adjust all the fields marked 'FIXME':
-   - `title`
-   - `created`
-   - `keywords`
-   - `life_cycle` (the default, _pre-alpha_, is the appropriate for brand new lessons)
-   - `contact`
-1. **Annotate the repository** with site URL and topic tags:
-   navigate back to the repository landing page and
-   click on the gear wheel/cog icon (similar to ⚙️) 
-   at the top-right of the _About_ box.
-   Check the "Use your GitHub Pages website" option,
-   and [add some keywords and other annotations to describe your lesson](https://cdh.carpentries.org/the-carpentries-incubator.html#topic-tags)
-   in the _Topics_ field.
-   At minimum, these should include:
-   - `lesson`
-   - the life cycle of the lesson (e.g. `pre-alpha`)
-   - the human language the lesson is written in (e.g. `deutsch`)
-1. **Adjust the name of the `.Rproj` file.**
-   It is simplest to make this match the name of the repository.
-1. **Adjust the 
-   `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, and `LICENSE.md` files**
-   as appropriate for your project.
-   -  `CODE_OF_CONDUCT.md`: 
-      if you are using this template for a project outside The Carpentries,
-      you should adjust this file to describe 
-      who should be contacted with Code of Conduct reports,
-      and how those reports will be handled.
-   -  `CONTRIBUTING.md`:
-      depending on the current state and maturity of your project,
-      the contents of the template Contributing Guide may not be appropriate.
-      You should adjust the file to help guide contributors on how best
-      to get involved and make an impact on your lesson.
-   -  `LICENSE.md`:
-      in line with the terms of the CC-BY license,
-      you should ensure that the copyright information 
-      provided in the license file is accurate for your project.
-1. **Update this README with 
-   [relevant information about your lesson](https://carpentries.github.io/lesson-development-training/collaborating-newcomers.html#readme)**
-   and delete this section.
+Install R (4.1 or later), then:
+
+```r
+install.packages(c("sandpaper", "varnish", "pegboard", "tinkr"),
+                 repos = c("https://carpentries.r-universe.dev/", getOption("repos")))
+install.packages(c("arrow", "dplyr", "tidyr", "stringr", "ggplot2"))
+
+sandpaper::build_lesson()
+```
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and our
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+Lesson content is licensed under [CC-BY 4.0](LICENSE.md).
 
 [workbench]: https://carpentries.github.io/sandpaper-docs/

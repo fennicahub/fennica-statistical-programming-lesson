@@ -1,11 +1,9 @@
-# This template CITATION.cff file was generated with cffinit.
-# Visit https://bit.ly/cffinit to replace its contents
-# with information about your lesson.
-# Remember to update this file periodically, 
+# Citation information for this lesson.
+# Remember to update this file periodically,
 # ensuring that the author list and other fields remain accurate.
 
 cff-version: 1.2.0
-title: FIXME
+title: Statistical Programming with the Fennica Bibliography
 message: >-
   Please cite this lesson using the information in this file
   when you refer to it in publications, and/or if you
@@ -15,8 +13,19 @@ type: dataset
 authors:
   - given-names: FIXME
     family-names: FIXME
+repository-code: 'https://github.com/fennicahub/fennica-statistical-programming-lesson'
 abstract: >-
-  FIXME Replace this with a short abstract describing the
-  lesson, e.g. its target audience and main intended
-  learning objectives.
+  An introductory lesson on statistical programming in R for
+  researchers and students in the humanities and library and
+  information science. Using the Fennica national bibliography
+  (1809-1917) as a running example, learners load, clean,
+  summarise, visualise and statistically analyse a real
+  bibliographic dataset.
+keywords:
+  - R
+  - statistics
+  - bibliographic data
+  - Fennica
+  - digital humanities
+  - The Carpentries
 license: CC-BY-4.0
