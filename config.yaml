@@ -24,7 +24,7 @@ title: 'Statistical Programming for Bibliographic Data Science'
 created: '2026-11-06'
 
 # Comma-separated list of keywords for the lesson
-keywords: 'R, tidyverse, statistics, bibliographic data science, preprocessing, harmonisation, validation, Fennica, digital humanities, lesson, The Carpentries'
+keywords: 'R, tidyverse, statistics, bibliographic data science, preprocessing, harmonisation, enrichment, validation, linked open data, Fennica, digital humanities, lesson, The Carpentries'
 
 # Life cycle stage of the lesson
 # refer to <https://docs.carpentries.org/resources/curriculum/lesson-life-cycle.html> for details
@@ -69,11 +69,14 @@ contact: 'FIXME@example.org' # FIXME: add a contact email for the lesson maintai
 episodes:
 - intro.Rmd
 - fennica-data.Rmd
+- cleaning.Rmd
 - harmonisation.Rmd
+- enrichment.Rmd
 - validation.Rmd
-- summarising-data.Rmd
-- visualisation.Rmd
-- statistics.Rmd
+- regression.Rmd
+- chi-squared.Rmd
+- research-question-3.Rmd
+- probabilistic.Rmd
 
 # Information for Learners
 learners: 

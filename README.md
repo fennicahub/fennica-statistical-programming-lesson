@@ -11,12 +11,17 @@ The lesson is built with [The Carpentries Workbench][workbench].
 ## Episodes
 
 1. Introduction to the Course
-2. Meet the Fennica Data
-3. Preprocessing and Harmonisation
-4. Validation
-5. Summarising Data
-6. Visualising Data with ggplot2
-7. Basic Statistical Analysis
+2. Data Description: The Finnish National Bibliography
+3. Making the data ready for analysis
+   1. Cleaning (the fennica package)
+   2. Harmonisation
+   3. Enrichment (Finto, Finna), *in preparation*
+   4. Validation
+4. Basic Statistical Analysis
+   1. Research Question 1: Linear Regression
+   2. Research Question 2: The Chi-Squared Test
+   3. Research Question 3, *in preparation*
+5. Probabilistic Analysis (Research Questions 4 and 5), *in preparation*
 
 ## Repository layout
 
@@ -25,7 +30,8 @@ The lesson is built with [The Carpentries Workbench][workbench].
 | `episodes/` | Lesson episodes (R Markdown) |
 | `episodes/data/harmonized_fennica19.feather` | The dataset used in the lesson (learners download it from [CSC object storage](https://a3s.fi/swift/v1/AUTH_3c0ccb602fa24298a6fe3ae224ca022f/fennica-container/output.tables/harmonized_fennica19.feather)) |
 | `episodes/data/priority_fields19.feather` | Raw catalogue records (learners download it from [CSC object storage](https://a3s.fi/swift/v1/AUTH_3c0ccb602fa24298a6fe3ae224ca022f/fennica-container/priority_fields19.feather)) |
-| `episodes/files/harmonise_fennica.R` | Harmonisation pipeline from the raw records |
+| `episodes/files/clean_records.R` | Cleaning functions for the raw records |
+| `episodes/files/harmonise_fennica.R` | Cleaning and harmonisation pipeline from the raw records |
 | `episodes/files/clean_fennica.R` | Prepares the project's harmonised data for the analysis episodes |
 | `learners/` | Setup instructions and glossary |
 | `instructors/` | Notes for instructors |

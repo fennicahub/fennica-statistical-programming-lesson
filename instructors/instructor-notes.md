@@ -9,11 +9,18 @@ data science*) uses the Fennica national bibliography (1809–1917) as a
 single running example. It covers preprocessing, harmonisation, validation
 and analysis. Learners are expected to know basic R (running scripts,
 loading packages, importing data, simple data-frame operations); no prior
-experience with bibliographic data is required. Episodes 2–4 (Meet the
-Fennica Data, harmonisation and validation) form Part 1 of the course: from
-raw records to analysis-ready, validated data. The analysis episodes are
-being redesigned to lead from descriptive statistics to statistical models
-and probabilistic analysis.
+experience with bibliographic data is required.
+
+The course has five parts:
+
+1. Introduction to the Course
+2. Data Description: The Finnish National Bibliography
+3. Making the data ready for analysis: Cleaning, Harmonisation, Enrichment
+   (in preparation), Validation
+4. Basic statistical analysis: Research Question 1 (linear regression),
+   Research Question 2 (chi-squared test), Research Question 3 (in
+   preparation)
+5. Probabilistic analysis: Research Questions 4 and 5 (in preparation)
 
 ## Before the workshop
 
@@ -37,7 +44,7 @@ and probabilistic analysis.
 - Demonstrate RStudio projects live: most later file path problems come from
   not working inside the project.
 
-### Meet the Fennica Data
+### Data Description: The Finnish National Bibliography
 
 - Challenge 2 (swapped columns) is a good moment for discussion: how would you
   notice this in your own data? The validation episode returns to it.
@@ -51,14 +58,29 @@ episodes build the variables (language, place, publisher, author) and show
 that the answer depends on data decisions; later parts of the course
 quantify that uncertainty.
 
-### Preprocessing and Harmonisation (about 80 minutes)
+### Cleaning (about 55 minutes)
 
 - Uses the raw records `priority_fields19.feather` (all 72,626 records; the
   `id` matches the harmonised data exactly). Columns are named, but the
   episode maps each to its MARC field.
-- Rhythm for every field: profile, find a pattern, clean with a function,
-  count again. Each field ends as a function; the episode ends with
-  `harmonise_records()`, which is also in `files/harmonise_fennica.R`.
+- The distinction to stress: cleaning removes **formal noise** (punctuation,
+  brackets, "unknown" phrases); harmonisation merges **real variants**.
+- Challenge 1: about 7% of the places in field 260 are in brackets (added by
+  the cataloguer). Cleaning should not silently destroy that information.
+- Challenge 2: "helsinki kustantaja tuntematon" shows why the "unknown"
+  pattern is anchored with `^` and `$`.
+- Challenge 3 is a discussion of `polish_publisher()` on GitHub: which rules
+  are general, which are specific to Fennica.
+- The functions are collected in `files/clean_records.R`, which the
+  harmonisation episode sources.
+- Regular expressions are new to many learners: build each pattern live on
+  the small `places` vector first.
+
+### Harmonisation (about 60 minutes)
+
+- Rhythm for every field: profile, find a pattern, harmonise with a function,
+  count again. The episode ends with `harmonise_records()`, which is also in
+  `files/harmonise_fennica.R` (self-contained, cleaning functions included).
 - Key teaching moments:
   - **Two sources for the same information:** 041 vs 008 for language,
     260 vs 264 for place. Combine them with `coalesce()`.
@@ -72,9 +94,17 @@ quantify that uncertainty.
   - **Authority IDs:** `asteri_id` separates the Runebergs and the two
     Alexandre Dumas. Among records with an ID there are more persons than
     name strings.
-- Regular expressions are new to many learners: build each pattern live on
-  the small `places` vector first.
 - If time is short, skip the publisher section.
+
+### Enrichment (in preparation)
+
+- Planned: Finto (`finaf` authority file, `yso`, `yso-paikat`) and Finna
+  APIs. The `localname` of a person in Finto's `finaf` vocabulary is the
+  same identifier as `asteri_id` in the records, so authors can be linked
+  without name matching.
+- The code in the episode is not run when the lesson is built. Test the API
+  calls on the workshop network beforehand; Finna's API may block requests
+  that look automated.
 
 ### Validation (about 70 minutes)
 
@@ -106,26 +136,26 @@ quantify that uncertainty.
   English genre labels).
 - Further findings from running the real `polish_*()` functions:
   `polish_author_years()` turns *syntynyt 1875* ("born 1875") into
-  birth = death = 1875 (the "age zero" authors in the visualisation episode),
+  birth = death = 1875 (authors who seem to die in the year they were born),
   and the harmonised `title` column is the uniform title (field 240).
 
-### Summarising Data
-
-- Stress the difference between counts and proportions; the language shift
-  from Swedish to Finnish is the key historical story.
-
-### Visualising Data with ggplot2
-
-- Build plots incrementally, adding one layer at a time.
-- The faceting example with `scales = "free_y"` is a good prompt to discuss how
-  plot choices can mislead.
-
-### Basic Statistical Analysis
+### Basic statistical analysis (Research Questions 1–3)
 
 - Learners may have no statistics background. Focus on interpretation rather
   than formulas.
-- The key messages are: medians for skewed data, correlation is not causation,
-  and with large data effect sizes matter more than p-values.
+- Research Question 1 (linear regression): summarise to one row per year
+  before modelling; stress plotting the model with the data. Challenge 2
+  links back to validation: the trend depends on which records are kept.
+- Research Question 2 (chi-squared): compare row proportions, observed and
+  expected counts, and report Cramér's V; with large data, effect sizes
+  matter more than p-values.
+- Research Question 3 is still open; the episode lists candidate questions.
+
+### Probabilistic analysis (in preparation)
+
+- Planned: Research Question 4 (when did Finnish pass 50%, with a bootstrap
+  interval) and Research Question 5 (simulating missing languages and
+  uncertain dates).
 
 ## Known data issues
 

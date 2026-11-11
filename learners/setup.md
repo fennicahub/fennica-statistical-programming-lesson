@@ -3,7 +3,7 @@ title: Setup
 ---
 
 This lesson uses **R** and **RStudio**, the packages **arrow**, **dplyr**,
-**tidyr**, **stringr** and **ggplot2**, and one dataset. Please complete the
+**tidyr**, **stringr**, **stringi**, **ggplot2** and **jsonlite**, and one dataset. Please complete the
 steps below before the workshop. It takes about 20–30 minutes.
 
 ## Software Setup
@@ -53,7 +53,7 @@ typing `R.version.string` in the R console.
 Open RStudio and run this line in the console:
 
 ```r
-install.packages(c("arrow", "dplyr", "tidyr", "stringr", "ggplot2"))
+install.packages(c("arrow", "dplyr", "tidyr", "stringr", "stringi", "ggplot2", "jsonlite"))
 ```
 
 Check that the installation worked by loading each package. You should not see
@@ -65,6 +65,7 @@ library(dplyr)
 library(tidyr)
 library(stringr)
 library(ggplot2)
+library(jsonlite)
 ```
 
 ## Data Sets

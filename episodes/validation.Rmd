@@ -30,7 +30,7 @@ source("files/harmonise_fennica.R")
 
 ## Why validate?
 
-In the previous episode we built our own harmonised variables: language,
+In the cleaning and harmonisation episodes we built our own harmonised variables: language,
 place, publisher and author. Every step was a decision, and some decisions
 will be wrong for some records. **Validation** means checking, systematically
 and with code, how good the result is. We use three kinds of checks:
@@ -42,7 +42,7 @@ and with code, how good the result is. We use three kinds of checks:
 3. **Consequences**: do the remaining problems change the answer to our
    question, *how did the shift from Swedish to Finnish happen?*
 
-We start where the previous episode ended. If you don't have `records` and
+We start where the harmonisation episode ended. If you don't have `records` and
 `fennica_ours` in your session any more, download
 [`harmonise_fennica.R`](files/harmonise_fennica.R) into your project folder
 and run it:
