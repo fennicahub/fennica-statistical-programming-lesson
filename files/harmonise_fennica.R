@@ -1,5 +1,6 @@
-# Harmonise the raw Fennica records (1809-1917), as in the episode
-# "Preprocessing and Harmonisation".
+# Clean and harmonise the raw Fennica records (1809-1917), as in the
+# episodes "Cleaning" and "Harmonisation". This script is self-contained:
+# it repeats the cleaning functions from clean_records.R.
 #
 # Input (in the folder data/):
 #   priority_fields19.feather       raw catalogue records
@@ -63,9 +64,13 @@ harmonise_place <- function(place_260, place_264, extent, synonyms) {
 
 # ---- Publisher: field 260b -------------------------------------------------
 
-harmonise_publisher <- function(x) {
+clean_publisher_text <- function(x) {
   x <- clean_place_text(x)
-  x <- gsub(",? *(i )?(distr\\.?|jakaja)$", "", x)
+  gsub(",? *(i )?(distr\\.?|jakaja)$", "", x)
+}
+
+harmonise_publisher <- function(x) {
+  x <- clean_publisher_text(x)
   case_when(
     grepl("tuntematon|^s\\.? ?n$", x)                     ~ NA,
     grepl("^(tekijä|tekijät|förf|författare|författaren)$", x) ~ "Self-published",
@@ -80,7 +85,13 @@ harmonise_publisher <- function(x) {
 
 # ---- Author: field 100a ----------------------------------------------------
 
-clean_author <- function(x) str_squish(gsub("[,.]+$", "", x))
+clean_author <- function(x) {
+  x <- gsub("\"", "", x)                       # transliterated hard sign
+  x <- gsub("\\s+[\\[(][^])]*[])]", "", x)     # other forms: [Kiwi], (Jalmari)
+  x <- gsub("^\\[(.*)\\][.,]*$", "\\1", x)     # whole name added by the cataloguer
+  x <- gsub("[,.]+$", "", x)                   # final punctuation
+  str_squish(x)                                # extra spaces
+}
 
 # ---- The whole pipeline ----------------------------------------------------
 

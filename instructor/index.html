@@ -225,7 +225,7 @@
 <div class="accordion accordion-flush" id="accordionFlush3">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading3">
-        <a href="fennica-data.html">2. Meet the Fennica Data</a>
+        <a href="fennica-data.html">2. Data Description: The Finnish National Bibliography</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -234,7 +234,7 @@
 <div class="accordion accordion-flush" id="accordionFlush4">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading4">
-        <a href="harmonisation.html">3. Preprocessing and Harmonisation: From MARC Records to Variables</a>
+        <a href="cleaning.html">3. Cleaning: From Raw Records to Tidy Text</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -243,7 +243,7 @@
 <div class="accordion accordion-flush" id="accordionFlush5">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading5">
-        <a href="validation.html">4. Validation: How Far Can We Trust the Harmonised Data?</a>
+        <a href="harmonisation.html">4. Harmonisation: One Name for One Thing</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -252,7 +252,7 @@
 <div class="accordion accordion-flush" id="accordionFlush6">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading6">
-        <a href="summarising-data.html">5. Summarising Data</a>
+        <a href="enrichment.html">5. Enrichment: Linking Records to Finto and Finna</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -261,7 +261,7 @@
 <div class="accordion accordion-flush" id="accordionFlush7">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading7">
-        <a href="visualisation.html">6. Visualising Data with ggplot2</a>
+        <a href="validation.html">6. Validation: How Far Can We Trust the Harmonised Data?</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -270,7 +270,34 @@
 <div class="accordion accordion-flush" id="accordionFlush8">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading8">
-        <a href="statistics.html">7. Basic Statistical Analysis</a>
+        <a href="regression.html">7. Research Question 1: Linear Regression</a>
+    </div><!--/div.accordion-header-->
+
+  </div><!--/div.accordion-item-->
+</div><!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush9">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading9">
+        <a href="chi-squared.html">8. Research Question 2: The Chi-Squared Test</a>
+    </div><!--/div.accordion-header-->
+
+  </div><!--/div.accordion-item-->
+</div><!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush10">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading10">
+        <a href="research-question-3.html">9. Research Question 3</a>
+    </div><!--/div.accordion-header-->
+
+  </div><!--/div.accordion-item-->
+</div><!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush11">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading11">
+        <a href="probabilistic.html">10. Probabilistic Analysis: How Certain Can We Be?</a>
     </div><!--/div.accordion-header-->
 
   </div><!--/div.accordion-item-->
@@ -356,11 +383,25 @@ from 1809 to 1917.</p>
 happen in 19th-century Finland, and how certain can we be about
 it?</strong></p>
 </blockquote>
-<p>We start from the raw library catalogue records, turn them into
-analysis-ready variables with reusable R code, check how far the result
-can be trusted, and then move on to descriptive statistics, statistical
-models and, finally, probabilistic analysis of the uncertainty in the
-data.</p>
+<p>The course has five parts:</p>
+<ol style="list-style-type: decimal"><li>
+<strong>Introduction</strong> to bibliographic data, MARC 21 and the
+tools of the course.</li>
+<li>
+<strong>Data description</strong> of the Finnish national
+bibliography.</li>
+<li>
+<strong>Making the data ready for analysis</strong>: cleaning with
+the fennica R package, harmonisation, enrichment with Finto and Finna,
+and validation.</li>
+<li>
+<strong>Basic statistical analysis</strong>: research questions
+answered with linear regression, the chi-squared test and other basic
+methods.</li>
+<li>
+<strong>Probabilistic analysis</strong> of how certain our answers
+are.</li>
+</ol><p>Some episodes are still in preparation and are marked as such.</p>
 <div id="prerequisites" class="callout prereq">
 <div class="callout-square">
 <i class="callout-icon" data-feather="check"></i>
@@ -379,19 +420,27 @@ before the workshop.</p>
 </div>
 <section><h2 class="section-heading" id="what-you-will-learn">What you will learn<a class="anchor" aria-label="anchor" href="#what-you-will-learn"></a></h2>
 <hr class="half-width"><ul><li>
-<strong>Preprocessing:</strong> profiling raw MARC records, cleaning
-text fields with regular expressions</li>
+<strong>Cleaning:</strong> profiling raw MARC records, cleaning text
+fields with regular expressions, reusing the fennica package</li>
 <li>
 <strong>Harmonisation:</strong> lookup and synonym tables, combining
 MARC fields, authority identifiers, writing the pipeline as reusable
 functions</li>
 <li>
+<strong>Enrichment:</strong> linking records to external
+vocabularies and collections (Finto, Finna) through identifiers and open
+APIs</li>
+<li>
 <strong>Validation:</strong> rule-based checks, comparison of
 independent harmonisations, non-random missingness, sensitivity of
 results to cleaning decisions</li>
 <li>
-<strong>Analysis:</strong> summarising, visualising and modelling
-the data</li>
+<strong>Basic statistical analysis:</strong> linear regression, the
+chi-squared test and other basic methods, applied to research
+questions</li>
+<li>
+<strong>Probabilistic analysis:</strong> expressing the uncertainty
+of results based on incomplete and inconsistent data</li>
 </ul><!--
 Place links that you need to refer to multiple times across pages here. Delete
 any links that you are not going to use.
@@ -412,7 +461,8 @@ packages do we use, and how?
 <span class="visually-hidden">Duration: </span>00h 45m
 </td>
 <td>
- 2. <a href="fennica-data.html">Meet the Fennica Data</a>
+ 2. <a href="fennica-data.html">Data Description: The Finnish National
+Bibliography</a>
 </td>
 <td>
 What is the Fennica bibliography and what does our dataset
@@ -423,20 +473,44 @@ overview of a data frame?
 <span class="visually-hidden">Duration: </span>01h 15m
 </td>
 <td>
- 3. <a href="harmonisation.html">Preprocessing and Harmonisation: From
-MARC Records to Variables</a>
+ 3. <a href="cleaning.html">Cleaning: From Raw Records to Tidy Text</a>
 </td>
 <td>
 What do raw bibliographic records look like, and how do we get to know
-an unfamiliar export?<br>How do we turn free-text catalogue fields into
-variables we can analyse?<br>How can harmonisation be written as
-reusable, reproducible code?
+an unfamiliar export?<br>What is “formal noise” in catalogue data, and
+how do we remove it?<br>How does the fennica R package clean
+bibliographic records, and how can we reuse its approach?
 </td>
 </tr><tr><td>
-<span class="visually-hidden">Duration: </span>02h 35m
+<span class="visually-hidden">Duration: </span>02h 20m
 </td>
 <td>
- 4. <a href="validation.html">Validation: How Far Can We Trust the
+ 4. <a href="harmonisation.html">Harmonisation: One Name for One
+Thing</a>
+</td>
+<td>
+How do we turn cleaned catalogue fields into consistent variables we can
+analyse?<br>How do we combine information from several MARC
+fields?<br>How can harmonisation be written as reusable, reproducible
+code?
+</td>
+</tr><tr><td>
+<span class="visually-hidden">Duration: </span>03h 20m
+</td>
+<td>
+ 5. <a href="enrichment.html">Enrichment: Linking Records to Finto and
+Finna</a>
+</td>
+<td>
+What can external sources add to bibliographic records?<br>How do we
+query an open API from R?<br>How do identifiers make it possible to
+link datasets?
+</td>
+</tr><tr><td>
+<span class="visually-hidden">Duration: </span>04h 05m
+</td>
+<td>
+ 6. <a href="validation.html">Validation: How Far Can We Trust the
 Harmonised Data?</a>
 </td>
 <td>
@@ -445,39 +519,54 @@ compare two harmonisations of the same records?<br>When do data
 problems change the answer to a research question?
 </td>
 </tr><tr><td>
-<span class="visually-hidden">Duration: </span>03h 45m
-</td>
-<td>
- 5. <a href="summarising-data.html">Summarising Data</a>
-</td>
-<td>
-How do I calculate summaries for groups of records?<br>How did
-publishing in Finland change over the 19th century?<br>How do I reshape
-a summary table?
-</td>
-</tr><tr><td>
-<span class="visually-hidden">Duration: </span>04h 25m
-</td>
-<td>
- 6. <a href="visualisation.html">Visualising Data with ggplot2</a>
-</td>
-<td>
-How do I make plots of my data in R?<br>Which kind of plot suits which
-kind of question?<br>How do I make a plot ready to share?
-</td>
-</tr><tr><td>
 <span class="visually-hidden">Duration: </span>05h 15m
 </td>
 <td>
- 7. <a href="statistics.html">Basic Statistical Analysis</a>
+ 7. <a href="regression.html">Research Question 1: Linear Regression</a>
 </td>
 <td>
-How do I describe a numeric variable with summary statistics?<br>How do
-I measure whether two variables are related?<br>How do I test whether
-groups differ, and how should I interpret the result?
+How fast did the share of Finnish-language publishing grow?<br>How do
+we describe a trend with a linear regression?<br>How do data decisions
+affect the estimated trend?
 </td>
 </tr><tr><td>
 <span class="visually-hidden">Duration: </span>06h 05m
+</td>
+<td>
+ 8. <a href="chi-squared.html">Research Question 2: The Chi-Squared
+Test</a>
+</td>
+<td>
+Did Finnish<br>and Swedish-language publishing differ in what kinds of
+books were published?<br>How do we test whether two categorical
+variables are associated?<br>Why do p-values say little in a very large
+dataset?
+</td>
+</tr><tr><td>
+<span class="visually-hidden">Duration: </span>06h 50m
+</td>
+<td>
+ 9. <a href="research-question-3.html">Research Question 3</a>
+</td>
+<td>
+Which further question about the language shift can a basic statistical
+method answer?
+</td>
+</tr><tr><td>
+<span class="visually-hidden">Duration: </span>07h 35m
+</td>
+<td>
+10. <a href="probabilistic.html">Probabilistic Analysis: How Certain Can
+We Be?</a>
+</td>
+<td>
+When did Finnish overtake Swedish in publishing, and how certain can we
+be about it?<br>How do missing values and uncertain dates affect our
+conclusions?<br>How can we express the uncertainty of a result with
+probabilities?
+</td>
+</tr><tr><td>
+<span class="visually-hidden">Duration: </span>08h 40m
 </td>
 <td>
 Finish
@@ -492,8 +581,9 @@ any links that you are not going to use.
       </p>
       </section><section id="setup"><p>This lesson uses <strong>R</strong> and <strong>RStudio</strong>, the
 packages <strong>arrow</strong>, <strong>dplyr</strong>,
-<strong>tidyr</strong>, <strong>stringr</strong> and
-<strong>ggplot2</strong>, and one dataset. Please complete the steps
+<strong>tidyr</strong>, <strong>stringr</strong>,
+<strong>stringi</strong>, <strong>ggplot2</strong> and
+<strong>jsonlite</strong>, and one dataset. Please complete the steps
 below before the workshop. It takes about 20–30 minutes.</p>
 <section><h2 class="section-heading" id="software-setup">Software Setup<a class="anchor" aria-label="anchor" href="#software-setup"></a></h2>
 <hr class="half-width"><div id="details" class="callout discussion">
@@ -520,7 +610,7 @@ in the R console.</p>
   Windows
   </h3>
 </button>
-<div id="collapseSpoiler1" class="accordion-collapse collapse" data-bs-parent="#accordionSpoiler1" aria-labelledby="headingSpoiler1">
+<div id="collapseSpoiler1" class="accordion-collapse collapse" aria-labelledby="headingSpoiler1" data-bs-parent="#accordionSpoiler1">
 <div class="accordion-body">
 <ol style="list-style-type: decimal"><li>Download and install R from <a href="https://cran.r-project.org/bin/windows/base/" class="external-link">CRAN</a>.</li>
 <li>Download and install <a href="https://posit.co/download/rstudio-desktop/" class="external-link">RStudio
@@ -537,7 +627,7 @@ Desktop</a>.</li>
   MacOS
   </h3>
 </button>
-<div id="collapseSpoiler2" class="accordion-collapse collapse" data-bs-parent="#accordionSpoiler2" aria-labelledby="headingSpoiler2">
+<div id="collapseSpoiler2" class="accordion-collapse collapse" aria-labelledby="headingSpoiler2" data-bs-parent="#accordionSpoiler2">
 <div class="accordion-body">
 <ol style="list-style-type: decimal"><li>Download and install R from <a href="https://cran.r-project.org/bin/macosx/" class="external-link">CRAN</a>. Choose the
 version for your processor (Apple silicon or Intel).</li>
@@ -555,7 +645,7 @@ Desktop</a>.</li>
   Linux
   </h3>
 </button>
-<div id="collapseSpoiler3" class="accordion-collapse collapse" data-bs-parent="#accordionSpoiler3" aria-labelledby="headingSpoiler3">
+<div id="collapseSpoiler3" class="accordion-collapse collapse" aria-labelledby="headingSpoiler3" data-bs-parent="#accordionSpoiler3">
 <div class="accordion-body">
 <ol style="list-style-type: decimal"><li>Install R by following the instructions for your distribution on <a href="https://cran.r-project.org/bin/linux/" class="external-link">CRAN</a>.</li>
 <li>Download and install <a href="https://posit.co/download/rstudio-desktop/" class="external-link">RStudio
@@ -571,7 +661,7 @@ Desktop</a>.</li>
 <h3 class="code-label">R<i aria-hidden="true" data-feather="chevron-left"></i><i aria-hidden="true" data-feather="chevron-right"></i>
 </h3>
 <pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">install.packages</span><span class="op">(</span><span class="fu">c</span><span class="op">(</span><span class="st">"arrow"</span>, <span class="st">"dplyr"</span>, <span class="st">"tidyr"</span>, <span class="st">"stringr"</span>, <span class="st">"ggplot2"</span><span class="op">)</span><span class="op">)</span></span></code></pre>
+<code class="sourceCode R"><span><span class="fu">install.packages</span><span class="op">(</span><span class="fu">c</span><span class="op">(</span><span class="st">"arrow"</span>, <span class="st">"dplyr"</span>, <span class="st">"tidyr"</span>, <span class="st">"stringr"</span>, <span class="st">"stringi"</span>, <span class="st">"ggplot2"</span>, <span class="st">"jsonlite"</span><span class="op">)</span><span class="op">)</span></span></code></pre>
 </div>
 <p>Check that the installation worked by loading each package. You
 should not see any errors (messages about masked objects are fine):</p>
@@ -583,7 +673,8 @@ should not see any errors (messages about masked objects are fine):</p>
 <span><span class="kw">library</span><span class="op">(</span><span class="va">dplyr</span><span class="op">)</span></span>
 <span><span class="kw">library</span><span class="op">(</span><span class="va">tidyr</span><span class="op">)</span></span>
 <span><span class="kw">library</span><span class="op">(</span><span class="va">stringr</span><span class="op">)</span></span>
-<span><span class="kw">library</span><span class="op">(</span><span class="va">ggplot2</span><span class="op">)</span></span></code></pre>
+<span><span class="kw">library</span><span class="op">(</span><span class="va">ggplot2</span><span class="op">)</span></span>
+<span><span class="kw">library</span><span class="op">(</span><span class="va">jsonlite</span><span class="op">)</span></span></code></pre>
 </div>
 </div>
 </section><section><h2 class="section-heading" id="data-sets">Data Sets<a class="anchor" aria-label="anchor" href="#data-sets"></a></h2>
@@ -702,14 +793,14 @@ any links that you are not going to use.
   "inLanguage": "en",
   "dct:conformsTo": "https://bioschemas.org/profiles/LearningResource/1.0-RELEASE",
   "description": "A Carpentries Lesson teaching foundational data and coding skills to researchers worldwide",
-  "keywords": "R, tidyverse, statistics, bibliographic data science, preprocessing, harmonisation, validation, Fennica, digital humanities, lesson, The Carpentries",
+  "keywords": "R, tidyverse, statistics, bibliographic data science, preprocessing, harmonisation, enrichment, validation, linked open data, Fennica, digital humanities, lesson, The Carpentries",
   "name": "Statistical Programming for Bibliographic Data Science",
   "creativeWorkStatus": "active",
   "url": "https://fennicahub.github.io/fennica-statistical-programming-lesson/instructor/index.html",
   "identifier": "https://fennicahub.github.io/fennica-statistical-programming-lesson/instructor/index.html",
   "dateCreated": "2026-11-06",
-  "dateModified": "2026-11-10",
-  "datePublished": "2026-11-10"
+  "dateModified": "2026-11-11",
+  "datePublished": "2026-11-11"
 }
 
   </script><script>

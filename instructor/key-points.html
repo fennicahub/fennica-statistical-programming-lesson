@@ -257,7 +257,7 @@
 <div class="accordion accordion-flush" id="accordionFlush3">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading3">
-        <a href="fennica-data.html">2. Meet the Fennica Data</a>
+        <a href="fennica-data.html">2. Data Description: The Finnish National Bibliography</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -269,7 +269,7 @@
 <div class="accordion accordion-flush" id="accordionFlush4">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading4">
-        <a href="harmonisation.html">3. Preprocessing and Harmonisation: From MARC Records to Variables</a>
+        <a href="cleaning.html">3. Cleaning: From Raw Records to Tidy Text</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -281,7 +281,7 @@
 <div class="accordion accordion-flush" id="accordionFlush5">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading5">
-        <a href="validation.html">4. Validation: How Far Can We Trust the Harmonised Data?</a>
+        <a href="harmonisation.html">4. Harmonisation: One Name for One Thing</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -293,7 +293,7 @@
 <div class="accordion accordion-flush" id="accordionFlush6">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading6">
-        <a href="summarising-data.html">5. Summarising Data</a>
+        <a href="enrichment.html">5. Enrichment: Linking Records to Finto and Finna</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -305,7 +305,7 @@
 <div class="accordion accordion-flush" id="accordionFlush7">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading7">
-        <a href="visualisation.html">6. Visualising Data with ggplot2</a>
+        <a href="validation.html">6. Validation: How Far Can We Trust the Harmonised Data?</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -317,7 +317,43 @@
 <div class="accordion accordion-flush" id="accordionFlush8">
   <div class="accordion-item">
     <div class="accordion-header" id="flush-heading8">
-        <a href="statistics.html">7. Basic Statistical Analysis</a>
+        <a href="regression.html">7. Research Question 1: Linear Regression</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush9">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading9">
+        <a href="chi-squared.html">8. Research Question 2: The Chi-Squared Test</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush10">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading10">
+        <a href="research-question-3.html">9. Research Question 3</a>
+    </div>
+<!--/div.accordion-header-->
+
+  </div>
+<!--/div.accordion-item-->
+</div>
+<!--/div.accordion-flush-->
+
+<div class="accordion accordion-flush" id="accordionFlush11">
+  <div class="accordion-item">
+    <div class="accordion-header" id="flush-heading11">
+        <a href="probabilistic.html">10. Probabilistic Analysis: How Certain Can We Be?</a>
     </div>
 <!--/div.accordion-header-->
 
@@ -416,7 +452,7 @@ reused, but its rules and lookup tables must be adapted to each
 bibliography.</li>
 <li>Work in an RStudio project and keep every step in a script, so your
 work is reproducible.</li>
-</ul></section><section id="fennica-data"><h2 class="section-heading"><a href="fennica-data.html">Meet the Fennica Data</a></h2>
+</ul></section><section id="fennica-data"><h2 class="section-heading"><a href="fennica-data.html">Data Description: The Finnish National Bibliography</a></h2>
 <hr class="half-width">
 <ul>
 <li>Fennica is the Finnish national bibliography; our data covers
@@ -430,13 +466,31 @@ Feather files.</li>
 and <code>table()</code> give a quick overview of the data.</li>
 <li>Check how much data is missing, and whether columns contain what
 their names suggest.</li>
-</ul></section><section id="harmonisation"><h2 class="section-heading"><a href="harmonisation.html">Preprocessing and Harmonisation: From MARC Records to Variables</a></h2>
+</ul></section><section id="cleaning"><h2 class="section-heading"><a href="cleaning.html">Cleaning: From Raw Records to Tidy Text</a></h2>
 <hr class="half-width">
 <ul>
 <li>Start with a profile of the data: unique values, missing values and
 the most common forms.</li>
-<li>Cataloguing punctuation, brackets and abbreviations are formal noise
-that regex can remove.</li>
+<li>Cleaning removes formal noise (punctuation, brackets, spaces);
+harmonisation, in the next episode, merges real variants.</li>
+<li>Catalogues have many ways of saying “unknown”; turn them into
+<code>NA</code>, with strict, anchored patterns.</li>
+<li>Cleaning should not destroy information: keep things like “added by
+the cataloguer” or an alternative name form in a separate column.</li>
+<li>A ready-made function such as <code>polish_author()</code> is a set
+of rules that fit most of the data: check what it does to yours, and
+load a fixed version (commit) of it.</li>
+<li>Some values, such as patronymics, initials and pseudonyms, do not
+fit the rules; keep or flag them instead.</li>
+<li>Write each cleaning step as a function, and apply slow functions to
+unique values only.</li>
+<li>The fennica package can be reused, but its language- and
+country-specific rules must be adapted.</li>
+</ul></section><section id="harmonisation"><h2 class="section-heading"><a href="harmonisation.html">Harmonisation: One Name for One Thing</a></h2>
+<hr class="half-width">
+<ul>
+<li>Harmonisation gives one thing one name: one code for one language,
+one name for one town.</li>
 <li>Lookup and synonym tables translate codes and merge variants; they
 are data that can be shared and corrected.</li>
 <li>The same information is often recorded in several MARC fields (041
@@ -446,8 +500,19 @@ check what each field really records.</li>
 copies, field 264 gives the place of digitisation.</li>
 <li>Name strings are not persons; authority identifiers are needed to
 tell people apart.</li>
-<li>Write each harmonisation step as a function and run the whole
-pipeline from the raw data.</li>
+<li>Write each step as a function and run the whole pipeline from the
+raw data.</li>
+</ul></section><section id="enrichment"><h2 class="section-heading"><a href="enrichment.html">Enrichment: Linking Records to Finto and Finna</a></h2>
+<hr class="half-width">
+<ul>
+<li>Enrichment adds information from external sources; harmonisation
+works inside the data.</li>
+<li>Finto provides vocabularies and authority data; Finna provides
+access to the collections of Finnish memory institutions.</li>
+<li>Open REST APIs return data (often JSON) that R can read with
+<code>jsonlite::fromJSON()</code>.</li>
+<li>Link datasets through identifiers, such as the Asteri identifier,
+rather than through name strings.</li>
 </ul></section><section id="validation"><h2 class="section-heading"><a href="validation.html">Validation: How Far Can We Trust the Harmonised Data?</a></h2>
 <hr class="half-width">
 <ul>
@@ -464,53 +529,43 @@ publications lack a publisher or place more often than Finnish
 ones.</li>
 <li>Always test whether cleaning and selection decisions change the
 answer to your research question.</li>
-</ul></section><section id="summarising-data"><h2 class="section-heading"><a href="summarising-data.html">Summarising Data</a></h2>
+</ul></section><section id="regression"><h2 class="section-heading"><a href="regression.html">Research Question 1: Linear Regression</a></h2>
 <hr class="half-width">
 <ul>
+<li>Summarise the records to the level of your question (here: one row
+per year) before modelling.</li>
 <li>
-<code>group_by()</code> + <code>summarise()</code> calculates
-summaries for each group.</li>
-<li>
-<code>n()</code> counts rows and <code>n_distinct()</code> counts
-unique values.</li>
-<li>Use proportions rather than raw counts to compare groups of
-different sizes.</li>
-<li>
-<code>ungroup()</code> or <code>.groups = "drop"</code> removes
-grouping when you no longer need it.</li>
-<li>
-<code>pivot_wider()</code> turns a long table into a wide one that
-is easier to read.</li>
-</ul></section><section id="visualisation"><h2 class="section-heading"><a href="visualisation.html">Visualising Data with ggplot2</a></h2>
+<code>lm(y ~ x)</code> fits a linear regression; the slope tells how
+much y changes per unit of x.</li>
+<li>Plot the data together with the model; a straight line is often too
+simple.</li>
+<li>The estimated trend depends on which records are included.</li>
+</ul></section><section id="chi-squared"><h2 class="section-heading"><a href="chi-squared.html">Research Question 2: The Chi-Squared Test</a></h2>
 <hr class="half-width">
 <ul>
-<li>A ggplot is built from data, aesthetic mappings (<code>aes()</code>)
-and geoms, joined with <code>+</code>.</li>
-<li>Bar charts compare categories, line charts show change, histograms
-and box plots show distributions.</li>
-<li>Map a variable to <code>colour</code> or <code>fill</code>, or use
-<code>facet_wrap()</code>, to show more variables.</li>
-<li>Sort categories, label axes and choose sensible scales to make plots
-readable.</li>
-<li>Save plots with <code>ggsave()</code>.</li>
-</ul></section><section id="statistics"><h2 class="section-heading"><a href="statistics.html">Basic Statistical Analysis</a></h2>
+<li>A contingency table counts the combinations of two categorical
+variables; compare row proportions, not counts.</li>
+<li>
+<code>chisq.test()</code> tests whether two categorical variables
+are independent.</li>
+<li>Compare observed and expected counts to see where an association
+comes from.</li>
+<li>In large datasets, report an effect size such as Cramér’s V, not
+only the p-value.</li>
+</ul></section><section id="research-question-3"><h2 class="section-heading"><a href="research-question-3.html">Research Question 3</a></h2>
 <hr class="half-width">
 <ul>
-<li>Use the median and quantiles to describe skewed variables; the mean
-is sensitive to extreme values.</li>
-<li>
-<code>cor()</code> measures association; Spearman correlation is
-more robust for skewed data.</li>
-<li>
-<code>t.test()</code> and <code>wilcox.test()</code> compare two
-groups; <code>chisq.test()</code> tests two categorical variables.</li>
-<li>
-<code>lm()</code> fits a linear regression; the slope tells how much
-y changes per unit of x.</li>
-<li>With large datasets, focus on effect sizes and plots, not only on
-p-values.</li>
-<li>Correlation is not causation, and every model is a
-simplification.</li>
+<li>A good research question fits both the data and the method.</li>
+<li>The reliability of each variable, established in validation, limits
+the questions we can answer.</li>
+</ul></section><section id="probabilistic"><h2 class="section-heading"><a href="probabilistic.html">Probabilistic Analysis: How Certain Can We Be?</a></h2>
+<hr class="half-width">
+<ul>
+<li>Every result from bibliographic data has an uncertainty, which comes
+from the data as well as from chance.</li>
+<li>Resampling and simulation make that uncertainty visible.</li>
+<li>Report ranges and probabilities, and explain which decisions they
+depend on.</li>
 </ul></section>
 </div>
     </main>
@@ -555,14 +610,14 @@ simplification.</li>
   "inLanguage": "en",
   "dct:conformsTo": "https://bioschemas.org/profiles/LearningResource/1.0-RELEASE",
   "description": "A Carpentries Lesson teaching foundational data and coding skills to researchers worldwide",
-  "keywords": "R, tidyverse, statistics, bibliographic data science, preprocessing, harmonisation, validation, Fennica, digital humanities, lesson, The Carpentries",
+  "keywords": "R, tidyverse, statistics, bibliographic data science, preprocessing, harmonisation, enrichment, validation, linked open data, Fennica, digital humanities, lesson, The Carpentries",
   "name": "Key Points",
   "creativeWorkStatus": "active",
   "url": "https://fennicahub.github.io/fennica-statistical-programming-lesson/instructor/key-points.html",
   "identifier": "https://fennicahub.github.io/fennica-statistical-programming-lesson/instructor/key-points.html",
   "dateCreated": "2026-11-06",
-  "dateModified": "2026-11-10",
-  "datePublished": "2026-11-10"
+  "dateModified": "2026-11-11",
+  "datePublished": "2026-11-11"
 }
 
   </script><script>
