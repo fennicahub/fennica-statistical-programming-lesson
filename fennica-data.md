@@ -1,5 +1,5 @@
 ---
-title: "Meet the Fennica Data"
+title: "Data Description: The Finnish National Bibliography"
 teaching: 20
 exercises: 10
 ---

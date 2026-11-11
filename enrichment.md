@@ -1,0 +1,128 @@
+---
+title: "Enrichment: Linking Records to Finto and Finna"
+teaching: 30
+exercises: 15
+---
+
+:::::::::::::::::::::::::::::::::::::: questions
+
+- What can external sources add to bibliographic records?
+- How do we query an open API from R?
+- How do identifiers make it possible to link datasets?
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: objectives
+
+- Explain the difference between harmonising data and enriching it.
+- Describe the Finnish services Finto (vocabularies and authority data) and Finna (library, archive and museum collections).
+- Query a REST API from R and turn the JSON response into a data frame.
+- Link records to external data through identifiers rather than name strings.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: caution
+
+### In preparation
+
+This episode is being developed. The outline and the code sketches below
+show the planned content; the code is not run when the lesson is built.
+
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+## From harmonisation to enrichment
+
+Harmonisation works **inside** the data: it gives one thing one name.
+**Enrichment** adds information from **outside**: the gender and
+birthplace of an author, the coordinates of a town, the subject of a book.
+For the running question this opens new angles: did Finnish-language
+publishing grow among new authors, in new places, or in new subjects?
+
+Enrichment is only as good as the **link** between the datasets. Linking by
+name strings is risky (remember the two Alexandre Dumas). Linking by
+**identifiers** is much safer, and the Fennica records already contain one:
+`asteri_id`, the identifier of the author in the national authority file.
+
+## Finto: vocabularies and authority data
+
+[Finto](https://finto.fi) is the Finnish thesaurus and ontology service,
+maintained by the National Library of Finland. It publishes, among others:
+
+| Vocabulary | Content | Use for Fennica |
+|------------|---------|-----------------|
+| `finaf` | Finnish national authority file (Asteri): persons and organisations | author dates, other name forms |
+| `yso` | General Finnish ontology: subject terms in Finnish, Swedish and English | subjects of publications |
+| `yso-paikat` | Place names | standard place names, links to other sources |
+
+Finto has an open **REST API**: a web address that returns data instead of
+a web page. For example, searching the authority file for Dumas:
+
+
+``` r
+library(jsonlite)
+
+url <- "https://api.finto.fi/rest/v1/search?vocab=finaf&query=Dumas*&lang=fi"
+result <- fromJSON(url)
+result$results[, c("localname", "prefLabel")]
+```
+
+The `localname` of each person is the same identifier as `asteri_id` in our
+records. Here the identifier `000041747` is Alexandre Dumas the father, and
+the authority record gives his years of life (1802–1870) even for records in
+which the cataloguer did not write them.
+
+## Finna: collections of libraries, archives and museums
+
+[Finna](https://finna.fi) brings together the collections of Finnish
+libraries, archives and museums. Its [API](https://api.finna.fi) can be used
+to find, for example, digitised copies, other editions or images related to
+a publication:
+
+
+``` r
+url <- paste0("https://api.finna.fi/v1/search?lookfor=Runeberg",
+              "&type=Author&limit=5&field[]=title&field[]=year")
+finna <- fromJSON(url)
+finna$records
+```
+
+## Planned content
+
+- Enrich authors with data from the authority file (years of life, other
+  name forms) through `asteri_id`.
+- Link place names to `yso-paikat` and add coordinates, for maps of
+  publishing.
+- Link records to digitised copies in Finna.
+- Good practice: query each identifier only once, save the results to a
+  file, and respect the services' usage limits.
+- How much did enrichment add, and for which records? (Enrichment can
+  itself be uneven across languages.)
+
+::::::::::::::::::::::::::::::::::::: challenge
+
+## Challenge 1: Search Finto
+
+Open [finto.fi](https://finto.fi) in your browser and search the YSO
+ontology for a subject that interests you, for example *runot* (poems).
+Which labels does the concept have in Finnish, Swedish and English? Why are
+multilingual labels useful for a bilingual bibliography?
+
+:::::::::::::::::::::::: solution
+
+Each YSO concept has a preferred label in Finnish, Swedish and English
+(for example *runot* – *dikter* – *poems*). Because the concept is the same,
+Finnish- and Swedish-language publications on the same subject can be
+compared directly, which helps to answer whether the language shift was
+the same in all subjects.
+
+:::::::::::::::::::::::::::::::::
+::::::::::::::::::::::::::::::::::::::::::::::::
+
+::::::::::::::::::::::::::::::::::::: keypoints
+
+- Enrichment adds information from external sources; harmonisation works inside the data.
+- Finto provides vocabularies and authority data; Finna provides access to the collections of Finnish memory institutions.
+- Open REST APIs return data (often JSON) that R can read with `jsonlite::fromJSON()`.
+- Link datasets through identifiers, such as the Asteri identifier, rather than through name strings.
+
+::::::::::::::::::::::::::::::::::::::::::::::::

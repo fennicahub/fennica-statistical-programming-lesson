@@ -26,7 +26,7 @@ exercises: 25
 
 ## Why validate?
 
-In the previous episode we built our own harmonised variables: language,
+In the cleaning and harmonisation episodes we built our own harmonised variables: language,
 place, publisher and author. Every step was a decision, and some decisions
 will be wrong for some records. **Validation** means checking, systematically
 and with code, how good the result is. We use three kinds of checks:
@@ -38,7 +38,7 @@ and with code, how good the result is. We use three kinds of checks:
 3. **Consequences**: do the remaining problems change the answer to our
    question, *how did the shift from Swedish to Finnish happen?*
 
-We start where the previous episode ended. If you don't have `records` and
+We start where the harmonisation episode ended. If you don't have `records` and
 `fennica_ours` in your session any more, download
 [`harmonise_fennica.R`](files/harmonise_fennica.R) into your project folder
 and run it:
@@ -107,7 +107,7 @@ validation_report
 1 id is unique                                      0
 2 language is a known language name                 0
 3 author has no digits                             16
-4 author has no brackets                            8
+4 author has no brackets                            1
 5 author has no final punctuation                   0
 6 publisher is longer than three characters      1057
 ```
@@ -489,7 +489,7 @@ agreement(comparison$author, comparison$their_author)
 ```
 
 ``` output
-[1] 0.8401764
+[1] 0.8399559
 ```
 
 ``` r

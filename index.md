@@ -16,10 +16,17 @@ The whole module follows one research question:
 > **How did the shift from Swedish to Finnish in publishing happen in
 > 19th-century Finland, and how certain can we be about it?**
 
-We start from the raw library catalogue records, turn them into
-analysis-ready variables with reusable R code, check how far the result can
-be trusted, and then move on to descriptive statistics, statistical models
-and, finally, probabilistic analysis of the uncertainty in the data.
+The course has five parts:
+
+1. **Introduction** to bibliographic data, MARC 21 and the tools of the course.
+2. **Data description** of the Finnish national bibliography.
+3. **Making the data ready for analysis**: cleaning with the fennica R
+   package, harmonisation, enrichment with Finto and Finna, and validation.
+4. **Basic statistical analysis**: research questions answered with linear
+   regression, the chi-squared test and other basic methods.
+5. **Probabilistic analysis** of how certain our answers are.
+
+Some episodes are still in preparation and are marked as such.
 
 ::::::::::::::::::::::::::::::::::::::::::  prereq
 
@@ -36,7 +43,9 @@ workshop.
 
 ## What you will learn
 
-- **Preprocessing:** profiling raw MARC records, cleaning text fields with regular expressions
+- **Cleaning:** profiling raw MARC records, cleaning text fields with regular expressions, reusing the fennica package
 - **Harmonisation:** lookup and synonym tables, combining MARC fields, authority identifiers, writing the pipeline as reusable functions
+- **Enrichment:** linking records to external vocabularies and collections (Finto, Finna) through identifiers and open APIs
 - **Validation:** rule-based checks, comparison of independent harmonisations, non-random missingness, sensitivity of results to cleaning decisions
-- **Analysis:** summarising, visualising and modelling the data
+- **Basic statistical analysis:** linear regression, the chi-squared test and other basic methods, applied to research questions
+- **Probabilistic analysis:** expressing the uncertainty of results based on incomplete and inconsistent data

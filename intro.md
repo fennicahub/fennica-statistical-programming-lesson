@@ -163,13 +163,13 @@ A catalogue is made for finding books, not for statistics. Before we can
 count and model, the records have to go through several stages, which also
 form the structure of this course:
 
-| Stage | What we do | Episode |
-|-------|-----------|---------|
-| **Preprocessing** | Load and profile the data; see what it contains and what is missing | Meet the Fennica Data |
-| **Harmonisation** | Turn free text and codes into consistent variables: one name for one place, one code for one language | Preprocessing and Harmonisation |
-| **Validation** | Check the result with rules, against an independent version, and against our research question | Validation |
-| **Analysis** | Descriptive statistics and visualisation | Summarising Data, Visualising Data |
-| **Modelling** | Simple statistical models, and finally probabilistic analysis of the uncertainty in the data | Statistical Analysis |
+| Part | What we do | Episodes |
+|------|-----------|----------|
+| **1. Introduction** | Bibliographic data, MARC 21 and the tools of the course | Introduction to the Course |
+| **2. Data description** | Load the Finnish national bibliography; see what it contains and what is missing | The Finnish National Bibliography |
+| **3. Making the data ready for analysis** | **Cleaning** (remove formal noise), **harmonisation** (one name for one thing), **enrichment** (add data from Finto and Finna) and **validation** (how far can we trust the result?) | Cleaning, Harmonisation, Enrichment, Validation |
+| **4. Basic statistical analysis** | Answer research questions with linear regression, the chi-squared test and other basic methods | Research Questions 1–3 |
+| **5. Probabilistic analysis** | Express how certain our answers are, given missing and uncertain data | Probabilistic Analysis |
 
 We do all of this in R scripts, so that every step is **documented and
 repeatable**: when the library publishes a new export of the catalogue, or
@@ -257,12 +257,14 @@ R's abilities are extended by **packages**. In this course we use:
 | **dplyr** | selecting, filtering, transforming and summarising data |
 | **tidyr** | reshaping data |
 | **stringr** | working with text |
+| **stringi** | text tools used by the fennica functions |
 | **ggplot2** | plots |
+| **jsonlite** | reading data from web APIs |
 
 You install a package once:
 
 ```r
-install.packages(c("arrow", "dplyr", "tidyr", "stringr", "ggplot2"))
+install.packages(c("arrow", "dplyr", "tidyr", "stringr", "stringi", "ggplot2", "jsonlite"))
 ```
 
 and load it each time you start a new R session:
